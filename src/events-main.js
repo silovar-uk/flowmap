@@ -14,8 +14,16 @@ function handleKeyDown(event){
   if(event.key==='Tab'){event.preventDefault();if(selection.type==='note')addSibling(selection.id);else{const rect=els.stage.getBoundingClientRect();const p=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);addNoteMutation(p.x-112,p.y-58);}return;}
 }
 
+function updatePanGuidance(){
+  els['canvas-hint'].innerHTML='<strong>空白をドラッグ</strong>でボードを移動　・　ダブルクリックで付箋を追加　・　右端の点から接続';
+  const shortcut=[...els['help-dialog'].querySelectorAll('.shortcut-grid > div')].find((item)=>item.textContent.includes('Space + ドラッグ'));
+  if(shortcut)shortcut.innerHTML='<kbd>空白をドラッグ</kbd><span>ボードを移動（Space＋ドラッグでも可）</span>';
+  const badge=document.querySelector('.version-badge');
+  if(badge)badge.textContent='v0.7.2';
+}
+
 function init(){
-  cacheElements();state=loadState();bindEvents();renderAll();requestAnimationFrame(()=>fitView());
+  cacheElements();state=loadState();updatePanGuidance();bindEvents();renderAll();requestAnimationFrame(()=>fitView());
   window.Flowmap={getState:()=>clone(state),reset:()=>{state=initialState();renderAll();}};
 }
 
