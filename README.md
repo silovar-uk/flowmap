@@ -12,11 +12,20 @@
 
 ## 公開
 
-`main` への更新を契機に、GitHub ActionsからGitHub Pagesへデプロイします。
+ビルド工程を必要としない静的サイトのため、GitHub Actionsではなく、`main`ブランチのルートから直接GitHub Pagesへ公開します。
 
-初回のみ、リポジトリの **Settings → Pages → Build and deployment → Source** で **GitHub Actions** を選択してください。公開後は次のURLで利用できます。
+初回のみ、リポジトリで次を設定してください。
+
+1. **Settings → Pages** を開く
+2. **Build and deployment → Source** を **Deploy from a branch** にする
+3. Branchを **main**、Folderを **/ (root)** にする
+4. **Save** を押す
+
+公開後は次のURLで利用できます。
 
 `https://silovar-uk.github.io/flowmap/`
+
+反映には数分かかることがあります。リポジトリには `.nojekyll` を置き、ファイルを加工せずそのまま配信します。
 
 ## ローカルで開く
 
