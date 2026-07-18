@@ -15,9 +15,14 @@ function handleKeyDown(event){
 }
 
 function updatePanGuidance(){
+  els['add-note'].innerHTML='<span>＋</span>処理';
+  els['add-note'].title='処理を追加';
   els['canvas-hint'].innerHTML='<strong>空白をドラッグ</strong>でボードを移動　・　ダブルクリックで処理を追加　・　上下左右の点から接続';
-  const shortcut=[...els['help-dialog'].querySelectorAll('.shortcut-grid > div')].find((item)=>item.textContent.includes('Space + ドラッグ'));
-  if(shortcut)shortcut.innerHTML='<kbd>空白をドラッグ</kbd><span>ボードを移動（Space＋ドラッグでも可）</span>';
+  const shortcuts=[...els['help-dialog'].querySelectorAll('.shortcut-grid > div')];
+  const panShortcut=shortcuts.find((item)=>item.textContent.includes('Space + ドラッグ'));
+  if(panShortcut)panShortcut.innerHTML='<kbd>空白をドラッグ</kbd><span>ボードを移動（Space＋ドラッグでも可）</span>';
+  const connectShortcut=shortcuts.find((item)=>item.textContent.includes('右端の点'));
+  if(connectShortcut)connectShortcut.innerHTML='<kbd>上下左右の点をドラッグ</kbd><span>直角に接続。空白へ離すと処理を追加</span>';
   const badge=document.querySelector('.version-badge');
   if(badge)badge.textContent='v0.8.0';
 }
