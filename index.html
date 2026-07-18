@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="全体像を失わずに、依存関係・期限・チェック項目を整理するイベントTODOツール" />
+  <title>Flowmap — イベント業務整理</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="eyebrow">FLOWMAP</div>
+        <input id="project-title" class="project-title" aria-label="プロジェクト名" />
+      </div>
+
+      <div class="topbar-center" aria-live="polite">
+        <span id="progress-label" class="progress-label">0 / 0 完了</span>
+        <span id="save-state" class="save-state">保存済み</span>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="undo-button" class="icon-button" type="button" title="元に戻す" aria-label="元に戻す">↶</button>
+        <button id="redo-button" class="icon-button" type="button" title="やり直す" aria-label="やり直す">↷</button>
+        <button id="export-button" class="secondary-button" type="button">書き出し</button>
+        <button id="print-button" class="primary-button" type="button">PDF</button>
+      </div>
+    </header>
+
+    <nav class="view-tabs" aria-label="表示切替">
+      <button class="view-tab is-active" data-view="list" type="button">一覧</button>
+      <button class="view-tab" data-view="overview" type="button">全体図</button>
+      <button class="view-tab" data-view="due" type="button">期限</button>
+      <button class="view-tab" data-view="pdf" type="button">PDFプレビュー</button>
+    </nav>
+
+    <main class="workspace">
+      <aside id="structure-sidebar" class="structure-sidebar" aria-label="全体構造">
+        <div class="sidebar-heading">
+          <div>
+            <div class="section-kicker">STRUCTURE</div>
+            <h2>全体構造</h2>
+          </div>
+          <button id="add-phase-button" class="small-button" type="button">＋ フェーズ</button>
+        </div>
+        <div id="structure-tree" class="structure-tree"></div>
+      </aside>
+
+      <section class="content-pane">
+        <div id="list-view" class="view-panel is-active" data-panel="list"></div>
+        <div id="overview-view" class="view-panel" data-panel="overview"></div>
+        <div id="due-view" class="view-panel" data-panel="due"></div>
+        <div id="pdf-view" class="view-panel" data-panel="pdf"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <dialog id="task-dialog" class="editor-dialog">
+    <form method="dialog" id="task-form">
+      <div class="dialog-header">
+        <div>
+          <div class="section-kicker">TASK DETAIL</div>
+          <h2 id="task-dialog-title">TODOを編集</h2>
+        </div>
+        <button class="icon-button" value="cancel" aria-label="閉じる" type="submit">×</button>
+      </div>
+
+      <input type="hidden" id="task-id" />
+      <div class="form-grid">
+        <label class="field field-wide">
+          <span>TODO名</span>
+          <input id="task-title" required maxlength="140" />
+        </label>
+        <label class="field">
+          <span>状態</span>
+          <select id="task-status">
+            <option value="todo">未着手</option>
+            <option value="doing">対応中</option>
+            <option value="waiting">確認待ち</option>
+            <option value="done">完了</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>期限</span>
+          <input id="task-due" type="datetime-local" />
+        </label>
+        <label class="field">
+          <span>担当</span>
+          <input id="task-assignee" maxlength="80" placeholder="例：自分、広報" />
+        </label>
+        <label class="field">
+          <span>場所</span>
+          <input id="task-location" maxlength="120" placeholder="例：コルソ1階" />
+        </label>
+        <label class="field field-wide">
+          <span>補足</span>
+          <textarea id="task-note" rows="3" maxlength="1000"></textarea>
+        </label>
+        <label class="field field-wide">
+          <span>関連リンク</span>
+          <input id="task-link" type="url" placeholder="https://" />
+        </label>
+        <label class="toggle-field field-wide">
+          <input id="task-overview" type="checkbox" />
+          <span>全体図に表示する</span>
+        </label>
+      </div>
+
+      <section class="dialog-section">
+        <div class="dialog-section-heading">
+          <h3>前提TODO</h3>
+          <span>完了してから着手するもの</span>
+        </div>
+        <div id="dependency-options" class="dependency-options"></div>
+      </section>
+
+      <section class="dialog-section">
+        <div class="dialog-section-heading">
+          <h3>チェック項目</h3>
+          <button id="add-checklist-dialog" class="small-button" type="button">＋ 追加</button>
+        </div>
+        <div id="dialog-checklist" class="dialog-checklist"></div>
+      </section>
+
+      <div class="dialog-footer">
+        <button id="delete-task-button" class="danger-button" type="button">削除</button>
+        <div class="dialog-footer-right">
+          <button value="cancel" class="secondary-button" type="submit">キャンセル</button>
+          <button id="save-task-button" value="default" class="primary-button" type="submit">保存</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="export-dialog" class="export-dialog">
+    <form method="dialog">
+      <div class="dialog-header">
+        <div>
+          <div class="section-kicker">IMPORT / EXPORT</div>
+          <h2>データの入出力</h2>
+        </div>
+        <button class="icon-button" value="cancel" aria-label="閉じる">×</button>
+      </div>
+      <div class="export-grid">
+        <button id="export-json" class="export-card" type="button">
+          <strong>JSONを書き出す</strong>
+          <span>完全なバックアップ</span>
+        </button>
+        <button id="export-yaml" class="export-card" type="button">
+          <strong>YAMLを書き出す</strong>
+          <span>読みやすい一括編集用</span>
+        </button>
+        <label class="export-card file-card">
+          <strong>ファイルを読み込む</strong>
+          <span>JSON / YAML</span>
+          <input id="import-file" type="file" accept=".json,.yaml,.yml,application/json,text/yaml" />
+        </label>
+      </div>
+      <div class="dialog-footer compact">
+        <button value="cancel" class="secondary-button">閉じる</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="task-row-template">
+    <div class="task-row">
+      <button class="drag-handle" type="button" tabindex="-1" aria-hidden="true">⠿</button>
+      <input class="task-complete" type="checkbox" />
+      <button class="task-title-button" type="button"></button>
+      <span class="task-checklist-progress"></span>
+      <span class="task-due-label"></span>
+      <span class="task-assignee-label"></span>
+      <span class="task-dependency-label"></span>
+      <span class="task-status-label"></span>
+      <button class="task-menu-button" type="button" aria-label="TODOを編集">•••</button>
+    </div>
+  </template>
+</body>
+</html>
