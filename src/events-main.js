@@ -15,16 +15,22 @@ function handleKeyDown(event){
 }
 
 function updatePanGuidance(){
-  els['canvas-hint'].innerHTML='<strong>空白をドラッグ</strong>でボードを移動　・　ダブルクリックで付箋を追加　・　右端の点から接続';
+  els['canvas-hint'].innerHTML='<strong>空白をドラッグ</strong>でボードを移動　・　ダブルクリックで処理を追加　・　上下左右の点から接続';
   const shortcut=[...els['help-dialog'].querySelectorAll('.shortcut-grid > div')].find((item)=>item.textContent.includes('Space + ドラッグ'));
   if(shortcut)shortcut.innerHTML='<kbd>空白をドラッグ</kbd><span>ボードを移動（Space＋ドラッグでも可）</span>';
   const badge=document.querySelector('.version-badge');
-  if(badge)badge.textContent='v0.7.2';
+  if(badge)badge.textContent='v0.8.0';
 }
 
 function init(){
-  cacheElements();state=loadState();updatePanGuidance();bindEvents();renderAll();requestAnimationFrame(()=>fitView());
-  window.Flowmap={getState:()=>clone(state),reset:()=>{state=initialState();renderAll();}};
+  cacheElements();
+  state=normalizeFlowchartState(loadState());
+  updatePanGuidance();
+  installFlowchartUi();
+  bindEvents();
+  renderAll();
+  requestAnimationFrame(()=>fitView());
+  window.Flowmap={getState:()=>clone(state),reset:()=>{state=initialState();state=normalizeFlowchartState(state);renderAll();}};
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
