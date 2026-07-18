@@ -4,24 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="付箋と囲みを直接操作しながら、業務の流れ・依存関係・補足を整理するワークフローホワイトボード" />
-  <meta name="theme-color" content="#f6f7f2" />
+  <meta name="theme-color" content="#f7f8f4" />
   <title>Flowmap — 業務ホワイトボード</title>
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=0.5.0" />
-  <link rel="shortcut icon" href="./favicon.svg?v=0.5.0" />
-  <link rel="stylesheet" href="./styles.css?v=0.5.0" />
-  <link rel="stylesheet" href="./whiteboard.css?v=0.5.0" />
-  <script src="./theme.js?v=0.5.0" defer></script>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=0.6.0" />
+  <link rel="shortcut icon" href="./favicon.svg?v=0.6.0" />
+  <link rel="stylesheet" href="./styles.css?v=0.6.0" />
+  <link rel="stylesheet" href="./whiteboard.css?v=0.6.0" />
+  <link rel="stylesheet" href="./whiteboard-refine.css?v=0.6.0" data-flowmap-refine="true" />
+  <script src="./theme.js?v=0.6.0" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js" defer></script>
-  <script src="./runtime-fixes.js?v=0.5.0" defer></script>
-  <script src="./app.js?v=0.5.0" defer></script>
+  <script src="./runtime-fixes.js?v=0.6.0" defer></script>
+  <script src="./app.js?v=0.6.0" defer></script>
 </head>
 <body>
   <div id="app" class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Flowmap ホーム">
-        <img src="./favicon.svg?v=0.5.0" alt="" />
+        <img src="./favicon.svg?v=0.6.0" alt="" />
         <span class="brand-name">flowmap</span>
-        <span class="version-badge">v0.5</span>
+        <span class="version-badge">v0.6</span>
       </a>
 
       <div class="toolbar toolbar-main" aria-label="編集ツール">
@@ -80,15 +81,15 @@
             <svg id="edge-layer" class="edge-layer" width="1800" height="1100" viewBox="0 0 1800 1100" aria-hidden="true">
               <defs>
                 <linearGradient id="edgeGradient" x1="0" x2="1">
-                  <stop offset="0%" stop-color="#738078" />
-                  <stop offset="100%" stop-color="#53635a" />
+                  <stop offset="0%" stop-color="#b6beb8" />
+                  <stop offset="100%" stop-color="#9fa9a2" />
                 </linearGradient>
                 <filter id="edgeGlow" x="-30%" y="-30%" width="160%" height="160%">
                   <feGaussianBlur stdDeviation="0" result="blur" />
                   <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter>
                 <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-                  <path d="M0,0 L8,4 L0,8 Z" fill="#68756d" />
+                  <path d="M0,0 L8,4 L0,8 Z" fill="#aeb7b1" />
                 </marker>
               </defs>
               <g id="edges"></g>
