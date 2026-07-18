@@ -1,0 +1,428 @@
+/* Flowmap v0.6 — hierarchy and legibility refinement */
+:root {
+  --wb6-ink: #222824;
+  --wb6-text: #344039;
+  --wb6-muted: #69746d;
+  --wb6-faint: #8e9892;
+  --wb6-line: #d9ded9;
+  --wb6-line-soft: #e7ebe7;
+  --wb6-edge: #aeb7b1;
+  --wb6-edge-active: #3f67b6;
+  --wb6-blue-bg: #e8effc;
+  --wb6-blue-text: #294f94;
+  --wb6-orange-bg: #f8ead8;
+  --wb6-orange-text: #7a4a16;
+  --wb6-green-bg: #e5f0e3;
+  --wb6-green-text: #35613a;
+  --wb6-red-bg: #f8e5e1;
+  --wb6-red-text: #8f3e35;
+  --wb6-neutral-bg: rgba(255, 255, 255, .82);
+  --wb6-neutral-text: #465149;
+}
+
+/* Overall hierarchy: content first, chrome second */
+.topbar {
+  min-height: 60px !important;
+  box-shadow: 0 1px 5px rgba(39, 48, 42, .05) !important;
+}
+
+.tool-button,
+.icon-button,
+.zoom-label,
+.canvas-action,
+.outline-button,
+.floating-panel-button,
+.minimap button {
+  box-shadow: none !important;
+  border-color: #cbd2cc !important;
+}
+
+.tool-button:hover,
+.icon-button:hover,
+.zoom-label:hover,
+.canvas-action:hover,
+.outline-button:hover,
+.floating-panel-button:hover,
+.minimap button:hover {
+  transform: none !important;
+  background: #f2f4f1 !important;
+  border-color: #aeb8b0 !important;
+}
+
+.tool-button.primary {
+  color: #3d351d !important;
+  background: #fff0a5 !important;
+  border-color: #dfc760 !important;
+  box-shadow: none !important;
+  font-weight: 750 !important;
+}
+
+.tool-button.primary:hover {
+  background: #ffe987 !important;
+}
+
+/* Board and section lines should stay in the background */
+.canvas-shell,
+.canvas-stage {
+  background-color: #f7f8f4 !important;
+  background-image:
+    linear-gradient(rgba(92, 108, 98, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(92, 108, 98, .035) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
+}
+
+#phase-layer > *,
+.phase-layer > * {
+  background: rgba(255, 255, 255, .16) !important;
+  border-left-width: 3px !important;
+  border-left-color: rgba(82, 99, 88, .15) !important;
+}
+
+#phase-layer h2,
+#phase-layer h3,
+#phase-layer strong,
+.phase-layer h2,
+.phase-layer h3,
+.phase-layer strong {
+  color: #59645d !important;
+  font-weight: 750 !important;
+}
+
+#group-layer > *,
+.group-layer > * {
+  background: rgba(255, 255, 255, .22) !important;
+  border: 1px solid #c8d0ca !important;
+  border-radius: 9px !important;
+}
+
+#group-layer > *.is-selected,
+#group-layer > *.selected,
+.group-layer > *.is-selected,
+.group-layer > *.selected {
+  border-color: #7d9bd3 !important;
+  box-shadow: 0 0 0 2px rgba(63, 103, 182, .10) !important;
+}
+
+#group-layer [class*="header"],
+#group-layer [class*="title"],
+.group-layer [class*="header"],
+.group-layer [class*="title"] {
+  color: #435047 !important;
+  background: rgba(246, 248, 244, .9) !important;
+  border-color: #d5dbd6 !important;
+  font-weight: 750 !important;
+}
+
+/* Sticky notes: quieter paper, clearer type */
+#node-layer > *,
+.node-layer > *,
+.flow-node,
+.task-node,
+.workflow-node,
+.canvas-node,
+.node-card,
+[data-node-id] {
+  color: var(--wb6-ink) !important;
+  background: #fff7c9 !important;
+  border-color: #d8cb88 !important;
+  box-shadow: 0 2px 4px rgba(39, 48, 42, .09), 0 7px 15px rgba(39, 48, 42, .05) !important;
+}
+
+#node-layer > *:hover,
+.node-layer > *:hover,
+.flow-node:hover,
+.task-node:hover,
+.workflow-node:hover,
+.canvas-node:hover,
+.node-card:hover {
+  border-color: #c3b367 !important;
+  box-shadow: 0 3px 6px rgba(39, 48, 42, .11), 0 9px 18px rgba(39, 48, 42, .07) !important;
+}
+
+#node-layer > *.is-selected,
+#node-layer > *.selected,
+.node-layer > *.is-selected,
+.node-layer > *.selected,
+.flow-node.is-selected,
+.flow-node.selected,
+.task-node.is-selected,
+.task-node.selected,
+[data-node-id].is-selected,
+[data-node-id].selected {
+  border-color: var(--wb6-edge-active) !important;
+  box-shadow: 0 0 0 3px rgba(63, 103, 182, .13), 0 3px 9px rgba(39, 48, 42, .09) !important;
+}
+
+#node-layer > *[data-status="doing"],
+#node-layer > *.status-doing,
+#node-layer > *.doing,
+.node-layer > *[data-status="doing"] {
+  background: #edf3fe !important;
+  border-color: #b5c7e8 !important;
+}
+
+#node-layer > *[data-status="waiting"],
+#node-layer > *.status-waiting,
+#node-layer > *.waiting,
+.node-layer > *[data-status="waiting"] {
+  background: #fff0dd !important;
+  border-color: #ddbd91 !important;
+}
+
+#node-layer > *[data-status="done"],
+#node-layer > *.status-done,
+#node-layer > *.done,
+.node-layer > *[data-status="done"] {
+  background: #edf5eb !important;
+  border-color: #bdd1ba !important;
+}
+
+#node-layer > *.is-overdue,
+#node-layer > *.overdue,
+.node-layer > *.is-overdue,
+.node-layer > *.overdue {
+  background: #faebe8 !important;
+  border-color: #dda9a1 !important;
+}
+
+#node-layer [class*="title"],
+.node-layer [class*="title"],
+.flow-node [class*="title"],
+.task-node [class*="title"] {
+  color: #222824 !important;
+  font-weight: 780 !important;
+  line-height: 1.42 !important;
+}
+
+#node-layer [class*="meta"],
+#node-layer [class*="due"],
+.node-layer [class*="meta"],
+.node-layer [class*="due"] {
+  color: #5c6860 !important;
+}
+
+/* Tags and classification chips: never use similar foreground/background colours */
+#node-layer [class*="tag"],
+#node-layer [class*="badge"],
+#node-layer [class*="chip"],
+#node-layer [class*="pill"],
+#node-layer [class*="label"],
+#node-layer [class*="type"],
+.node-layer [class*="tag"],
+.node-layer [class*="badge"],
+.node-layer [class*="chip"],
+.node-layer [class*="pill"],
+.node-layer [class*="label"],
+.node-layer [class*="type"] {
+  color: var(--wb6-neutral-text) !important;
+  background: var(--wb6-neutral-bg) !important;
+  border: 1px solid rgba(73, 86, 77, .22) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  font-weight: 700 !important;
+}
+
+#node-layer [class*="status"],
+.node-layer [class*="status"] {
+  color: #4b564f !important;
+  background: rgba(255, 255, 255, .76) !important;
+  border-color: rgba(75, 88, 79, .22) !important;
+  font-weight: 720 !important;
+}
+
+#node-layer > *[data-status="doing"] [class*="status"],
+#node-layer > *.status-doing [class*="status"],
+.node-layer > *[data-status="doing"] [class*="status"] {
+  color: var(--wb6-blue-text) !important;
+  background: var(--wb6-blue-bg) !important;
+  border-color: #afc3e8 !important;
+}
+
+#node-layer > *[data-status="waiting"] [class*="status"],
+#node-layer > *.status-waiting [class*="status"],
+.node-layer > *[data-status="waiting"] [class*="status"] {
+  color: var(--wb6-orange-text) !important;
+  background: var(--wb6-orange-bg) !important;
+  border-color: #dfc09b !important;
+}
+
+#node-layer > *[data-status="done"] [class*="status"],
+#node-layer > *.status-done [class*="status"],
+.node-layer > *[data-status="done"] [class*="status"] {
+  color: var(--wb6-green-text) !important;
+  background: var(--wb6-green-bg) !important;
+  border-color: #b8d0b5 !important;
+}
+
+#node-layer > *.is-overdue [class*="status"],
+#node-layer > *.overdue [class*="status"],
+.node-layer > *.is-overdue [class*="status"],
+.node-layer > *.overdue [class*="status"] {
+  color: var(--wb6-red-text) !important;
+  background: var(--wb6-red-bg) !important;
+  border-color: #dfaaa2 !important;
+}
+
+/* Connections: visible when needed, quiet by default */
+#edges path,
+.edge-layer path:not(#connection-preview),
+.flow-edge,
+.edge-path {
+  stroke: var(--wb6-edge) !important;
+  stroke-width: 1.35px !important;
+  opacity: .66 !important;
+  filter: none !important;
+  vector-effect: non-scaling-stroke;
+}
+
+#edges path[stroke="transparent"],
+.edge-layer path[stroke="transparent"] {
+  stroke: transparent !important;
+  opacity: 0 !important;
+  stroke-width: 12px !important;
+}
+
+#arrowHead path {
+  fill: var(--wb6-edge) !important;
+  opacity: .72 !important;
+}
+
+#edges path:hover,
+#edges path.is-selected,
+#edges path.selected,
+.flow-edge:hover,
+.flow-edge.is-selected,
+.flow-edge.selected,
+.edge-path:hover,
+.edge-path.is-selected,
+.edge-path.selected {
+  stroke: var(--wb6-edge-active) !important;
+  stroke-width: 2.25px !important;
+  opacity: 1 !important;
+}
+
+#connection-preview,
+.connection-preview {
+  stroke: var(--wb6-edge-active) !important;
+  stroke-width: 2px !important;
+  opacity: .9 !important;
+}
+
+/* Handles stay discoverable only around active work */
+#node-layer [class*="handle"],
+#node-layer [class*="port"],
+#node-layer [class*="connector"],
+.node-layer [class*="handle"],
+.node-layer [class*="port"],
+.node-layer [class*="connector"] {
+  background: #fff !important;
+  border-color: #6685bd !important;
+  box-shadow: 0 1px 3px rgba(63, 103, 182, .18) !important;
+}
+
+/* Side information: labels should be quieter, values should be clear */
+.panel-kicker,
+.relation-label {
+  color: #818b85 !important;
+}
+
+.form-stack label > span,
+.memo-field > span,
+.toggle-row span,
+.checklist-summary span {
+  color: #66716a !important;
+  font-weight: 650 !important;
+}
+
+#field-title,
+.status-select,
+.form-stack input,
+.form-stack select,
+.memo-field textarea,
+.checklist-editor input,
+.app-dialog input,
+.app-dialog select,
+.app-dialog textarea {
+  color: var(--wb6-ink) !important;
+  border-color: #d2d8d3 !important;
+  box-shadow: none !important;
+}
+
+#field-title:focus,
+.status-select:focus,
+.form-stack input:focus,
+.form-stack select:focus,
+.memo-field textarea:focus,
+.checklist-editor input:focus {
+  border-color: #8da7d5 !important;
+  box-shadow: 0 0 0 3px rgba(63, 103, 182, .10) !important;
+}
+
+.inspector-title-row {
+  background: #fff9d8 !important;
+  border-bottom-color: #e6dca9 !important;
+}
+
+.inspector-tabs {
+  background: #f5f6f3 !important;
+}
+
+.inspector-tab {
+  color: #6b756f !important;
+}
+
+.inspector-tab.is-active {
+  color: #2c4f8b !important;
+  background: #fff !important;
+  border-color: #d3d9d4 !important;
+}
+
+/* Secondary helpers */
+.canvas-hint {
+  color: #6a746e !important;
+  background: rgba(255, 255, 252, .86) !important;
+  border-color: #dce1dc !important;
+  box-shadow: none !important;
+  opacity: .78 !important;
+}
+
+.canvas-hint:hover {
+  opacity: 1 !important;
+}
+
+.minimap {
+  opacity: .78 !important;
+  box-shadow: 0 2px 8px rgba(39, 48, 42, .07) !important;
+}
+
+.minimap:hover {
+  opacity: 1 !important;
+}
+
+.minimap rect,
+.minimap [class*="node"] {
+  fill: #d8d1a0 !important;
+  stroke: #a9a277 !important;
+}
+
+/* Tree counters and tags */
+#structure-tree [class*="badge"],
+#structure-tree [class*="tag"],
+#structure-tree [class*="count"],
+#structure-tree [class*="chip"] {
+  color: #48534c !important;
+  background: #edf0ec !important;
+  border: 1px solid #d4dad5 !important;
+  text-shadow: none !important;
+  font-weight: 700 !important;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
