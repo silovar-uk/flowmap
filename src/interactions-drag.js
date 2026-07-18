@@ -20,19 +20,46 @@ function beginGroupDrag(event, groupId) {
 }
 
 function beginPan(event) {
-  if (!(spaceHeld || event.button === 1)) return false;
-  drag = { type:'pan', clientX:event.clientX, clientY:event.clientY, x:state.viewport.x, y:state.viewport.y };
+  if (event.defaultPrevented) return false;
+  const shortcutPan = spaceHeld || event.button === 1;
+  const interactive = event.target.closest('.sticky-note,.group-header,.phase-title,.edge-hit,.edge-endpoint,button,input,textarea,select,[contenteditable="true"]');
+  const blankPan = event.button === 0 && !interactive;
+  if (!shortcutPan && !blankPan) return false;
+  drag = {
+    type:'pan',
+    clientX:event.clientX,
+    clientY:event.clientY,
+    x:state.viewport.x,
+    y:state.viewport.y,
+    moved:false,
+    clearSelectionOnClick: blankPan && !event.target.closest('.group-card,.phase-card')
+  };
   els.stage.classList.add('is-panning');
   event.preventDefault();
   return true;
+}
+
+function suppressClickAfterPan() {
+  const stop = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    cleanup();
+  };
+  const cleanup = () => document.removeEventListener('click', stop, true);
+  document.addEventListener('click', stop, true);
+  setTimeout(cleanup, 120);
 }
 
 function handlePointerMove(event) {
   if (connect) return updateConnection(event);
   if (!drag) return;
   if (drag.type === 'pan') {
-    state.viewport.x = drag.x + event.clientX - drag.clientX;
-    state.viewport.y = drag.y + event.clientY - drag.clientY;
+    const dx = event.clientX - drag.clientX;
+    const dy = event.clientY - drag.clientY;
+    drag.moved ||= Math.hypot(dx, dy) > 3;
+    state.viewport.x = drag.x + dx;
+    state.viewport.y = drag.y + dy;
     applyLayout(); renderMinimap();
     return;
   }
@@ -64,8 +91,12 @@ function handlePointerUp(event) {
   if (connect) return finishConnection(event);
   if (!drag) return;
   if (drag.type === 'pan') {
+    const finished = drag;
+    drag = null;
     els.stage.classList.remove('is-panning');
-    drag = null; saveState(); renderAll(); return;
+    if (finished.moved) suppressClickAfterPan();
+    else if (finished.clearSelectionOnClick) selection = { type:null, id:null };
+    saveState(); renderAll(); return;
   }
   const finished = drag;
   drag = null;
