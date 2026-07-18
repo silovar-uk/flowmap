@@ -1,0 +1,33 @@
+function bindEvents() {
+  els['add-note'].addEventListener('click',()=>{const rect=els.stage.getBoundingClientRect();const p=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);addNoteMutation(p.x-112,p.y-58);});
+  [els['add-phase'],els['nav-add-phase']].forEach((button)=>button.addEventListener('click',()=>mutate('フェーズを追加',()=>{const index=state.phases.length;const phase={id:uid('phase'),title:'新しいフェーズ',x:40+index*750,y:40,w:700,h:1250};state.phases.push(phase);selection={type:'phase',id:phase.id};})));
+  els['add-group'].addEventListener('click',()=>mutate('囲みを追加',()=>{const rect=els.stage.getBoundingClientRect();const p=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);const phase=findPhaseAt(p.x,p.y)||state.phases[0];const group={id:uid('group'),phaseId:phase?.id||'',title:'新しい囲み',x:p.x-280,y:p.y-150,w:560,h:300,color:'gray',collapsed:false};state.groups.push(group);selection={type:'group',id:group.id};}));
+  els['auto-layout'].addEventListener('click',autoLayout);els.undo.addEventListener('click',undo);els.redo.addEventListener('click',redo);
+  els['zoom-in'].addEventListener('click',()=>zoomAt(1.15));els['zoom-out'].addEventListener('click',()=>zoomAt(1/1.15));els['zoom-reset'].addEventListener('click',()=>{state.viewport.scale=1;state.viewport.x=20;state.viewport.y=20;saveState();renderAll();});
+  els['fit-view'].addEventListener('click',()=>fitView());
+  els['center-selection'].addEventListener('click',()=>selection.type==='note'?fitView(selection.id):fitView());
+  els['toggle-grid'].addEventListener('click',()=>{state.settings.grid=!state.settings.grid;saveState();renderAll();});
+  els['help-button'].addEventListener('click',()=>els['help-dialog'].showModal());
+  els['data-button'].addEventListener('click',()=>els['data-dialog'].showModal());els['print-button'].addEventListener('click',()=>{renderPrint();window.print();});
+  els['collapse-navigator'].addEventListener('click',()=>{state.settings.navigatorOpen=false;saveState();renderAll();});els['open-navigator'].addEventListener('click',()=>{state.settings.navigatorOpen=true;saveState();renderAll();});
+  els['close-inspector'].addEventListener('click',()=>{state.settings.inspectorOpen=false;saveState();renderAll();});els['open-inspector'].addEventListener('click',()=>{state.settings.inspectorOpen=true;saveState();renderAll();});
+  els.stage.addEventListener('dblclick',(event)=>{if(event.target.closest('.sticky-note,.group-card,.phase-card'))return;const p=screenToWorld(event.clientX,event.clientY);addNoteMutation(p.x-112,p.y-58);});
+  els.stage.addEventListener('wheel',(event)=>{event.preventDefault();zoomAt(event.deltaY<0?1.08:1/1.08,event.clientX,event.clientY);},{passive:false});
+  els.stage.addEventListener('pointerdown',(event)=>{if(beginPan(event))return;if(event.target===els.stage||event.target===els.world){clearSelection();}});
+  document.addEventListener('pointermove',handlePointerMove);document.addEventListener('pointerup',handlePointerUp);
+  els['node-layer'].addEventListener('pointerdown',(event)=>{const handle=event.target.closest('[data-connect-from]');if(handle)return beginConnection(event,handle.dataset.connectFrom);if(event.target.closest('button,input,textarea,select'))return;const card=event.target.closest('.sticky-note');if(card)beginNodeDrag(event,card.dataset.noteId);});
+  els['node-layer'].addEventListener('dblclick',(event)=>{const card=event.target.closest('.sticky-note');if(card){event.stopPropagation();startInlineEdit(card.dataset.noteId);}});
+  els['node-layer'].addEventListener('click',(event)=>{const quick=event.target.closest('[data-quick]');if(quick){event.stopPropagation();return openQuickEditor(quick.dataset.noteId,quick.dataset.quick,quick);}const card=event.target.closest('.sticky-note');if(card)select('note',card.dataset.noteId);});
+  els['group-layer'].addEventListener('pointerdown',(event)=>{const header=event.target.closest('[data-drag-group]');if(header&&!event.target.closest('button'))beginGroupDrag(event,header.dataset.dragGroup);});
+  els['group-layer'].addEventListener('click',(event)=>{const collapse=event.target.closest('[data-collapse-group]');if(collapse){event.stopPropagation();const id=collapse.dataset.collapseGroup;return mutate(getGroup(id).collapsed?'囲みを展開':'囲みを折りたたむ',()=>getGroup(id).collapsed=!getGroup(id).collapsed);}const card=event.target.closest('.group-card');if(card)select('group',card.dataset.groupId);});
+  els['phase-layer'].addEventListener('click',(event)=>{const card=event.target.closest('.phase-card');if(card)select('phase',card.dataset.phaseId);});
+  els.edges.addEventListener('pointerdown',(event)=>{const endpoint=event.target.closest('[data-edge-end]');if(endpoint)beginReconnect(event,endpoint.dataset.edgeId,endpoint.dataset.edgeEnd);});
+  els.edges.addEventListener('click',(event)=>{const hit=event.target.closest('[data-edge-id]');if(hit)select('edge',hit.dataset.edgeId);});
+  els['structure-tree'].addEventListener('click',(event)=>{const button=event.target.closest('[data-select-type]');if(!button)return;select(button.dataset.selectType,button.dataset.selectId);if(button.dataset.selectType==='note')fitView(button.dataset.selectId);});
+  [els['search-input'],els['navigator-search']].forEach((input)=>input.addEventListener('input',renderNotes));
+  els.tabs.forEach((tab)=>tab.addEventListener('click',()=>{activeTab=tab.dataset.tab;renderInspector();}));
+  bindInspectorFields();bindDataEvents();
+  document.addEventListener('keydown',handleKeyDown);document.addEventListener('keyup',(event)=>{if(event.code==='Space'){spaceHeld=false;}});
+  document.addEventListener('click',(event)=>{if(!event.target.closest('#quick-popover,[data-quick]'))closeQuickPopover();});
+  window.addEventListener('resize',()=>{renderMinimap();});
+}
