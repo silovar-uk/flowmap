@@ -27,6 +27,37 @@ function updatePanGuidance(){
   if(badge)badge.textContent='v0.8.0';
 }
 
+const baseFinalizeNoteDrop = finalizeNoteDrop;
+finalizeNoteDrop = function finalizeFlowchartNoteDrop(noteId){
+  const item=getNote(noteId);
+  if(!item)return;
+  const size=noteDisplaySize(item);
+  const cx=item.x+size.w/2,cy=item.y+size.h/2;
+  const group=findGroupAt(cx,cy);
+  const phase=group?getPhase(group.phaseId):findPhaseAt(cx,cy);
+  if(group?.id!==item.groupId){
+    item.groupId=group?.id||'';
+    if(group)item.phaseId=group.phaseId;
+  }
+  if(phase)item.phaseId=phase.id;
+  const edgeItem=nearestEdge(cx,cy,24/state.viewport.scale,noteId);
+  if(edgeItem){
+    state.edges=state.edges.filter((edgeObj)=>edgeObj.id!==edgeItem.id);
+    state.edges.push(
+      edge(uid('edge'),edgeItem.from,noteId,edgeItem.label||''),
+      edge(uid('edge'),noteId,edgeItem.to,'')
+    );
+    recordActivity('矢印の途中へ図形を挿入',noteId);
+    toast('矢印の途中へ図形を挿入しました');
+    return;
+  }
+  const overlap=state.notes.find((other)=>other.id!==noteId&&overlapRatio(item,other)>.38);
+  if(overlap&&(!item.groupId||item.groupId!==overlap.groupId)){
+    actionToast('重なった2枚を囲みにまとめますか？','まとめる',()=>groupPair(noteId,overlap.id));
+  }
+  recordActivity('図形を移動',noteId);
+};
+
 function init(){
   cacheElements();
   state=normalizeFlowchartState(loadState());
