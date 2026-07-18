@@ -10,16 +10,17 @@
 - ブラウザの印刷機能によるPDF化
 - AI・外部API・ログイン不要
 
-## 使い方
+## 公開
 
-GitHub Pagesを有効にするだけで利用できます。
+`main` への更新を契機に、GitHub ActionsからGitHub Pagesへデプロイします。
 
-1. リポジトリの **Settings → Pages** を開く
-2. Sourceを **Deploy from a branch** にする
-3. Branchを `main`、Folderを `/ (root)` にする
-4. 表示されたURLへアクセスする
+初回のみ、リポジトリの **Settings → Pages → Build and deployment → Source** で **GitHub Actions** を選択してください。公開後は次のURLで利用できます。
 
-ローカルでは、簡易HTTPサーバーで開いてください。
+`https://silovar-uk.github.io/flowmap/`
+
+## ローカルで開く
+
+簡易HTTPサーバーを起動します。
 
 ```bash
 python -m http.server 8000
