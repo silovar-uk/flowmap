@@ -25,6 +25,13 @@ function beginPan(event) {
   const interactive = event.target.closest('.sticky-note,.group-header,.phase-title,.edge-hit,.edge-endpoint,button,input,textarea,select,[contenteditable="true"]');
   const blankPan = event.button === 0 && !interactive;
   if (!shortcutPan && !blankPan) return false;
+  const groupCard = event.target.closest('.group-card');
+  const phaseCard = event.target.closest('.phase-card');
+  const clickSelection = groupCard
+    ? { type:'group', id:groupCard.dataset.groupId }
+    : phaseCard
+      ? { type:'phase', id:phaseCard.dataset.phaseId }
+      : null;
   drag = {
     type:'pan',
     clientX:event.clientX,
@@ -32,7 +39,8 @@ function beginPan(event) {
     x:state.viewport.x,
     y:state.viewport.y,
     moved:false,
-    clearSelectionOnClick: blankPan && !event.target.closest('.group-card,.phase-card')
+    clickSelection,
+    clearSelectionOnClick: blankPan && !clickSelection
   };
   els.stage.classList.add('is-panning');
   event.preventDefault();
@@ -95,7 +103,10 @@ function handlePointerUp(event) {
     drag = null;
     els.stage.classList.remove('is-panning');
     if (finished.moved) suppressClickAfterPan();
-    else if (finished.clearSelectionOnClick) selection = { type:null, id:null };
+    else if (finished.clickSelection) {
+      selection = finished.clickSelection;
+      state.settings.inspectorOpen = true;
+    } else if (finished.clearSelectionOnClick) selection = { type:null, id:null };
     saveState(); renderAll(); return;
   }
   const finished = drag;
