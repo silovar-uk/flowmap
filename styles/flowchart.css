@@ -59,6 +59,12 @@
 .node-type-document .node-meta,
 .node-type-document .node-progress,
 .node-type-document .node-quick-actions { position: relative; z-index: 1; }
+.node-type-decision .node-type-label,
+.node-type-decision .node-updated,
+.node-type-input .node-type-label,
+.node-type-input .node-updated,
+.node-type-document .node-type-label,
+.node-type-document .node-updated { z-index: 2; }
 .node-type-decision .connector-handle,
 .node-type-input .connector-handle,
 .node-type-document .connector-handle { position: absolute; z-index: 4; }
