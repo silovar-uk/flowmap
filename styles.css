@@ -1,1 +1,0 @@
-:root{color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080c16;color:#eef5ff;font-family:system-ui,sans-serif}body:before{content:"Loading Flowmap…";position:fixed;inset:0;display:grid;place-items:center;color:#8493aa;background:#080c16;z-index:-1}
