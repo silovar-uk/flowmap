@@ -1,5 +1,5 @@
 .board { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--board); }
-.stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: default; background-color: var(--board); background-image: linear-gradient(var(--board-grid) 1px, transparent 1px), linear-gradient(90deg, var(--board-grid) 1px, transparent 1px); background-size: 28px 28px; }
+.stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; cursor: grab; background-color: var(--board); background-image: linear-gradient(var(--board-grid) 1px, transparent 1px), linear-gradient(90deg, var(--board-grid) 1px, transparent 1px); background-size: 28px 28px; }
 .stage.grid-off { background-image: none; }
 .stage.is-panning { cursor: grabbing; }
 .world { position: absolute; left: 0; top: 0; width: 2400px; height: 1600px; transform-origin: 0 0; }
@@ -10,7 +10,7 @@
 .node-layer { z-index: 4; pointer-events: none; }
 .phase-card { position: absolute; padding: 14px 16px; border-left: 3px solid rgba(82,99,88,.14); background: rgba(255,255,255,.14); color: #59645d; pointer-events: auto; }
 .phase-card.is-selected { border-left-color: #7d9bd3; background: rgba(238,243,252,.26); }
-.phase-title { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; }
+.phase-title { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; cursor: pointer; }
 .group-card { position: absolute; border: 1px solid #c8d0ca; border-radius: 9px; background: rgba(255,255,255,.20); pointer-events: auto; }
 .group-card[data-color="blue"] { --group-accent: #8fa7d3; }
 .group-card[data-color="green"] { --group-accent: #91b395; }
@@ -29,7 +29,8 @@
 .edge-hit { fill: none; stroke: transparent; stroke-width: 14px; pointer-events: stroke; cursor: pointer; vector-effect: non-scaling-stroke; }
 #arrow-head path { fill: #aeb7b1; }
 .connection-preview { fill: none; stroke: var(--blue); stroke-width: 2px; stroke-dasharray: 7 5; marker-end: url(#arrow-head); vector-effect: non-scaling-stroke; }
-.sticky-note { position: absolute; width: 224px; min-height: 116px; padding: 13px 13px 10px; border: 1px solid #d8cb88; border-radius: 4px; background: var(--paper-yellow); color: var(--ink); box-shadow: var(--shadow); pointer-events: auto; user-select: none; transition: box-shadow .12s ease, border-color .12s ease; }
+.sticky-note { position: absolute; width: 224px; min-height: 116px; padding: 13px 13px 10px; border: 1px solid #d8cb88; border-radius: 4px; background: var(--paper-yellow); color: var(--ink); box-shadow: var(--shadow); pointer-events: auto; user-select: none; cursor: grab; transition: box-shadow .12s ease, border-color .12s ease; }
+.sticky-note:active { cursor: grabbing; }
 .sticky-note:hover { border-color: #c3b367; box-shadow: 0 3px 6px rgba(39,48,42,.11), 0 9px 18px rgba(39,48,42,.07); }
 .sticky-note.is-selected { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(63,103,182,.13), 0 3px 9px rgba(39,48,42,.09); }
 .sticky-note.is-search-match { box-shadow: 0 0 0 4px rgba(226,171,42,.34), var(--shadow); }
@@ -50,7 +51,7 @@
 .node-progress i { display: block; height: 100%; background: #6f9d72; }
 .node-quick-actions { display: none; gap: 4px; flex-wrap: wrap; margin-top: 9px; padding-top: 8px; border-top: 1px dashed rgba(72,84,76,.22); }
 .sticky-note.is-selected .node-quick-actions { display: flex; }
-.node-quick-actions button { min-height: 24px; padding: 2px 7px; border: 1px solid rgba(73,86,77,.22); border-radius: 6px; background: rgba(255,255,255,.74); color: #526057; font-size: 9px; font-weight: 700; }
+.node-quick-actions button { min-height: 24px; padding: 2px 7px; border: 1px solid rgba(73,86,77,.22); border-radius: 6px; background: rgba(255,255,255,.74); color: #526057; font-size: 9px; font-weight: 700; cursor: pointer; }
 .node-quick-actions button:hover { background: #fff; border-color: #95a399; }
 .connector-handle { position: absolute; right: -9px; top: 50%; width: 17px; height: 17px; transform: translateY(-50%); border: 2px solid var(--blue); border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(65,104,183,.20); cursor: crosshair; opacity: 0; transition: opacity .12s; }
 .sticky-note:hover .connector-handle, .sticky-note.is-selected .connector-handle { opacity: 1; }
