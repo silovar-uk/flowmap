@@ -1,4 +1,4 @@
-/* Flowmap v0.4.1 compatibility and print runtime */
+/* Flowmap v0.5 compatibility and print runtime */
 (() => {
   const escapeHtml = (value = "") => String(value)
     .replaceAll("&", "&amp;")
@@ -31,7 +31,7 @@
           height: auto !important;
           overflow: visible !important;
           background: #fff !important;
-          color: #111827 !important;
+          color: #252a27 !important;
         }
         #app, #toast-region, .app-dialog { display: none !important; }
         #print-sheet {
@@ -41,17 +41,18 @@
           min-height: 0 !important;
           padding: 0 !important;
           background: #fff !important;
-          color: #111827 !important;
+          color: #252a27 !important;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
         .flowmap-print-cover {
           padding: 0 0 12mm;
-          border-bottom: 2px solid #111827;
+          border-top: 7px solid #e5c654;
+          border-bottom: 2px solid #3b453f;
           margin-bottom: 8mm;
         }
         .flowmap-print-kicker {
-          margin: 0 0 3mm;
-          color: #4f46e5;
+          margin: 5mm 0 3mm;
+          color: #6e7771;
           font-size: 9pt;
           font-weight: 800;
           letter-spacing: .14em;
@@ -63,14 +64,14 @@
         }
         .flowmap-print-meta {
           margin: 0;
-          color: #6b7280;
+          color: #6e7771;
           font-size: 9pt;
         }
         .flowmap-print-section { margin: 0 0 8mm; }
         .flowmap-print-section h2 {
           margin: 0 0 3mm;
           padding-bottom: 2mm;
-          border-bottom: 1px solid #d1d5db;
+          border-bottom: 1px solid #cfd6d0;
           font-size: 13pt;
         }
         .flowmap-print-list {
@@ -83,18 +84,18 @@
           grid-template-columns: 8mm 1fr;
           gap: 2mm;
           padding: 2.5mm 0;
-          border-bottom: 1px solid #e5e7eb;
+          border-bottom: 1px solid #e1e5df;
           break-inside: avoid;
           font-size: 10pt;
         }
         .flowmap-print-number {
-          color: #6b7280;
+          color: #6e7771;
           font-variant-numeric: tabular-nums;
         }
         .flowmap-print-empty {
           padding: 5mm;
-          border: 1px dashed #cbd5e1;
-          color: #64748b;
+          border: 1px dashed #b9c3bc;
+          color: #6e7771;
           font-size: 10pt;
         }
       }
@@ -135,7 +136,7 @@
             <span class="flowmap-print-number">${String(index + 1).padStart(2, "0")}</span>
             <span>${escapeHtml(title)}</span>
           </li>`).join("")
-      : '<div class="flowmap-print-empty">表示中の作業はありません。</div>';
+      : '<div class="flowmap-print-empty">表示中の付箋はありません。</div>';
 
     const structureHtml = structure.length
       ? `<ul class="flowmap-print-list">${structure.map((title, index) => `
@@ -143,21 +144,21 @@
             <span class="flowmap-print-number">${String(index + 1).padStart(2, "0")}</span>
             <span>${escapeHtml(title)}</span>
           </li>`).join("")}</ul>`
-      : '<div class="flowmap-print-empty">フェーズ・グループ情報はありません。</div>';
+      : '<div class="flowmap-print-empty">フェーズ・囲み情報はありません。</div>';
 
     sheet.innerHTML = `
       <article>
         <header class="flowmap-print-cover">
           <p class="flowmap-print-kicker">FLOWMAP</p>
-          <h1>業務フローマップ</h1>
-          <p class="flowmap-print-meta">出力日時：${escapeHtml(now)}　／　作業数：${taskItems.length}</p>
+          <h1>業務ホワイトボード</h1>
+          <p class="flowmap-print-meta">出力日時：${escapeHtml(now)}　／　付箋数：${taskItems.length}</p>
         </header>
         <section class="flowmap-print-section">
           <h2>全体構造</h2>
           ${structureHtml}
         </section>
         <section class="flowmap-print-section">
-          <h2>作業一覧</h2>
+          <h2>付箋一覧</h2>
           <ul class="flowmap-print-list">${listHtml}</ul>
         </section>
       </article>
