@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="全体像を失わずに、依存関係・期限・チェック項目を整理するイベントTODOツール" />
-  <meta name="theme-color" content="#0B1020" />
-  <title>Flowmap — イベント業務整理</title>
+  <meta name="description" content="図を直接操作しながら、業務の流れ・依存関係・補足を整理するワークフローマップ" />
+  <meta name="theme-color" content="#090d18" />
+  <title>Flowmap — Visual Workflow Builder</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="shortcut icon" href="./favicon.svg" />
   <link rel="stylesheet" href="./styles.css" />
@@ -15,173 +15,217 @@
 <body>
   <div id="app" class="app-shell">
     <header class="topbar">
-      <div class="brand-block">
-        <div class="eyebrow">FLOWMAP</div>
-        <input id="project-title" class="project-title" aria-label="プロジェクト名" />
+      <a class="brand" href="#" aria-label="Flowmap ホーム">
+        <img src="./favicon.svg" alt="" />
+        <span class="brand-name">flowmap</span>
+        <span class="version-badge">v0.3</span>
+      </a>
+
+      <div class="toolbar toolbar-main" aria-label="編集ツール">
+        <button id="add-task" class="tool-button primary" type="button" title="作業を追加">
+          <span class="tool-icon">＋</span><span>作業を追加</span>
+        </button>
+        <button id="add-group" class="tool-button" type="button" title="グループを追加">
+          <span class="tool-icon">▣</span><span>グループ</span>
+        </button>
+        <span class="toolbar-divider"></span>
+        <button id="auto-layout" class="tool-button" type="button" title="自動整列">
+          <span class="tool-icon">≋</span><span>整列</span>
+        </button>
+        <button id="undo-button" class="icon-button" type="button" title="元に戻す">↶</button>
+        <button id="redo-button" class="icon-button" type="button" title="やり直す">↷</button>
       </div>
 
-      <div class="topbar-center" aria-live="polite">
-        <span id="progress-label" class="progress-label">0 / 0 完了</span>
-        <span id="save-state" class="save-state">保存済み</span>
-      </div>
-
-      <div class="topbar-actions">
-        <button id="undo-button" class="icon-button" type="button" title="元に戻す" aria-label="元に戻す">↶</button>
-        <button id="redo-button" class="icon-button" type="button" title="やり直す" aria-label="やり直す">↷</button>
-        <button id="export-button" class="secondary-button" type="button">書き出し</button>
-        <button id="print-button" class="primary-button" type="button">PDF</button>
+      <div class="toolbar toolbar-view" aria-label="表示操作">
+        <div class="zoom-control">
+          <button id="zoom-out" class="icon-button" type="button" aria-label="縮小">−</button>
+          <button id="zoom-label" class="zoom-label" type="button" title="100%に戻す">100%</button>
+          <button id="zoom-in" class="icon-button" type="button" aria-label="拡大">＋</button>
+        </div>
+        <button id="fit-view" class="tool-button compact" type="button">全体表示</button>
+        <label class="search-box">
+          <span>⌕</span>
+          <input id="search-input" type="search" placeholder="作業を検索…" />
+          <kbd>⌘K</kbd>
+        </label>
+        <button id="data-button" class="tool-button compact" type="button">データ</button>
+        <button id="print-button" class="tool-button primary compact" type="button">PDF出力</button>
       </div>
     </header>
 
-    <nav class="view-tabs" aria-label="表示切替">
-      <button class="view-tab is-active" data-view="list" type="button">一覧</button>
-      <button class="view-tab" data-view="overview" type="button">全体図</button>
-      <button class="view-tab" data-view="due" type="button">期限</button>
-      <button class="view-tab" data-view="pdf" type="button">PDFプレビュー</button>
-    </nav>
-
     <main class="workspace">
-      <aside id="structure-sidebar" class="structure-sidebar" aria-label="全体構造">
-        <div class="sidebar-heading">
+      <aside id="navigator" class="navigator panel-surface" aria-label="構造ナビゲーター">
+        <div class="panel-header">
           <div>
-            <div class="section-kicker">STRUCTURE</div>
-            <h2>全体構造</h2>
+            <div class="panel-kicker">STRUCTURE</div>
+            <h2>構造</h2>
           </div>
-          <button id="add-phase-button" class="small-button" type="button">＋ フェーズ</button>
+          <button id="collapse-navigator" class="icon-button subtle" type="button" title="閉じる">‹</button>
+        </div>
+        <div class="navigator-search-wrap">
+          <input id="navigator-search" type="search" placeholder="検索" />
         </div>
         <div id="structure-tree" class="structure-tree"></div>
+        <div class="navigator-footer">
+          <button id="add-phase" class="outline-button" type="button">＋ フェーズを追加</button>
+        </div>
       </aside>
 
-      <section class="content-pane">
-        <div id="list-view" class="view-panel is-active" data-panel="list"></div>
-        <div id="overview-view" class="view-panel" data-panel="overview"></div>
-        <div id="due-view" class="view-panel" data-panel="due"></div>
-        <div id="pdf-view" class="view-panel" data-panel="pdf"></div>
+      <section id="canvas-shell" class="canvas-shell" aria-label="フロー編集キャンバス">
+        <div id="canvas-stage" class="canvas-stage" tabindex="0">
+          <div id="world" class="world">
+            <svg id="edge-layer" class="edge-layer" width="1800" height="1100" viewBox="0 0 1800 1100" aria-hidden="true">
+              <defs>
+                <linearGradient id="edgeGradient" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#35dcff" />
+                  <stop offset="52%" stop-color="#5277ff" />
+                  <stop offset="100%" stop-color="#a855f7" />
+                </linearGradient>
+                <filter id="edgeGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+                  <path d="M0,0 L8,4 L0,8 Z" fill="#9fb6d8" />
+                </marker>
+              </defs>
+              <g id="edges"></g>
+              <path id="connection-preview" class="connection-preview" d="" hidden></path>
+            </svg>
+            <div id="phase-layer" class="phase-layer"></div>
+            <div id="group-layer" class="group-layer"></div>
+            <div id="node-layer" class="node-layer"></div>
+          </div>
+        </div>
+
+        <button id="open-navigator" class="floating-panel-button nav-open" type="button" hidden>構造</button>
+        <button id="open-inspector" class="floating-panel-button inspector-open" type="button" hidden>詳細</button>
+
+        <div class="canvas-hint" id="canvas-hint">
+          <strong>空白をダブルクリック</strong>で作業を追加　・　ノード右端の点からドラッグして接続
+        </div>
+
+        <div class="canvas-actions">
+          <button id="center-selection" class="canvas-action" type="button" title="選択を中央へ">◎</button>
+          <button id="toggle-grid" class="canvas-action is-active" type="button" title="グリッド表示">⌗</button>
+        </div>
+
+        <div id="minimap" class="minimap" aria-label="ミニマップ">
+          <svg id="minimap-svg" viewBox="0 0 1800 1100"></svg>
+          <div class="minimap-controls">
+            <button id="minimap-minus" type="button">−</button>
+            <button id="minimap-fit" type="button">⌗</button>
+            <button id="minimap-plus" type="button">＋</button>
+          </div>
+        </div>
       </section>
+
+      <aside id="inspector" class="inspector panel-surface" aria-label="選択項目の詳細">
+        <div class="panel-header inspector-header">
+          <div>
+            <div class="panel-kicker">INSPECTOR</div>
+            <h2 id="inspector-heading">選択中の作業</h2>
+          </div>
+          <button id="close-inspector" class="icon-button subtle" type="button" title="閉じる">×</button>
+        </div>
+
+        <div id="inspector-empty" class="inspector-empty">
+          <div class="empty-orbit">◎</div>
+          <strong>図から項目を選択</strong>
+          <p>作業、グループ、矢印の補足情報をここで編集できます。</p>
+        </div>
+
+        <div id="node-inspector" class="inspector-body" hidden>
+          <div class="inspector-title-row">
+            <textarea id="field-title" rows="2" maxlength="140" aria-label="作業名"></textarea>
+            <select id="field-status" class="status-select" aria-label="状態">
+              <option value="todo">未着手</option>
+              <option value="doing">対応中</option>
+              <option value="waiting">確認待ち</option>
+              <option value="done">完了</option>
+            </select>
+          </div>
+
+          <div class="inspector-tabs" role="tablist">
+            <button class="inspector-tab is-active" data-tab="detail" type="button">詳細</button>
+            <button class="inspector-tab" data-tab="checklist" type="button">チェック項目</button>
+            <button class="inspector-tab" data-tab="memo" type="button">メモ</button>
+          </div>
+
+          <section class="tab-panel is-active" data-tab-panel="detail">
+            <div class="form-stack">
+              <label><span>期限</span><input id="field-due" type="datetime-local" /></label>
+              <label><span>担当</span><input id="field-assignee" type="text" maxlength="80" placeholder="例：広報" /></label>
+              <label><span>場所</span><input id="field-location" type="text" maxlength="120" placeholder="例：コルソ1階" /></label>
+              <label><span>関連リンク</span><input id="field-link" type="url" placeholder="https://" /></label>
+              <label><span>所属グループ</span><select id="field-group"></select></label>
+              <label class="toggle-row"><input id="field-overview" type="checkbox" /><span>PDFの全体図に表示</span></label>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="checklist">
+            <div class="checklist-summary">
+              <div><strong id="checklist-count">0 / 0 完了</strong><span>チェック進捗</span></div>
+              <div class="progress-track"><i id="checklist-bar"></i></div>
+            </div>
+            <div id="checklist-editor" class="checklist-editor"></div>
+            <button id="add-check-item" class="outline-button" type="button">＋ 項目を追加</button>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="memo">
+            <label class="memo-field"><span>補足</span><textarea id="field-note" rows="8" maxlength="2000" placeholder="この作業を進めるための補足や注意事項"></textarea></label>
+          </section>
+
+          <div class="inspector-danger-zone">
+            <button id="delete-node" class="danger-button" type="button">作業を削除</button>
+          </div>
+        </div>
+
+        <div id="edge-inspector" class="inspector-body" hidden>
+          <div class="relation-card">
+            <span class="relation-label">DEPENDENCY</span>
+            <strong id="edge-summary">作業A → 作業B</strong>
+            <p>矢印の端点をドラッグすると、接続先を変更できます。</p>
+          </div>
+          <div class="form-stack">
+            <label><span>接続元</span><select id="edge-from"></select></label>
+            <label><span>接続先</span><select id="edge-to"></select></label>
+          </div>
+          <button id="reverse-edge" class="outline-button" type="button">矢印を反転</button>
+          <button id="delete-edge" class="danger-button full" type="button">関係を削除</button>
+        </div>
+
+        <div id="group-inspector" class="inspector-body" hidden>
+          <div class="form-stack">
+            <label><span>グループ名</span><input id="group-title-field" type="text" maxlength="80" /></label>
+            <label><span>色</span><select id="group-color-field">
+              <option value="blue">ブルー</option>
+              <option value="green">グリーン</option>
+              <option value="orange">オレンジ</option>
+              <option value="purple">パープル</option>
+              <option value="cyan">シアン</option>
+            </select></label>
+          </div>
+          <button id="toggle-group-collapse" class="outline-button" type="button">折りたたむ</button>
+          <button id="delete-group" class="danger-button full" type="button">グループを削除</button>
+        </div>
+      </aside>
     </main>
   </div>
 
-  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
-
-  <dialog id="task-dialog" class="editor-dialog">
-    <form method="dialog" id="task-form">
-      <div class="dialog-header">
-        <div>
-          <div class="section-kicker">TASK DETAIL</div>
-          <h2 id="task-dialog-title">TODOを編集</h2>
-        </div>
-        <button class="icon-button" value="cancel" aria-label="閉じる" type="submit">×</button>
-      </div>
-
-      <input type="hidden" id="task-id" />
-      <div class="form-grid">
-        <label class="field field-wide">
-          <span>TODO名</span>
-          <input id="task-title" required maxlength="140" />
-        </label>
-        <label class="field">
-          <span>状態</span>
-          <select id="task-status">
-            <option value="todo">未着手</option>
-            <option value="doing">対応中</option>
-            <option value="waiting">確認待ち</option>
-            <option value="done">完了</option>
-          </select>
-        </label>
-        <label class="field">
-          <span>期限</span>
-          <input id="task-due" type="datetime-local" />
-        </label>
-        <label class="field">
-          <span>担当</span>
-          <input id="task-assignee" maxlength="80" placeholder="例：自分、広報" />
-        </label>
-        <label class="field">
-          <span>場所</span>
-          <input id="task-location" maxlength="120" placeholder="例：コルソ1階" />
-        </label>
-        <label class="field field-wide">
-          <span>補足</span>
-          <textarea id="task-note" rows="3" maxlength="1000"></textarea>
-        </label>
-        <label class="field field-wide">
-          <span>関連リンク</span>
-          <input id="task-link" type="url" placeholder="https://" />
-        </label>
-        <label class="toggle-field field-wide">
-          <input id="task-overview" type="checkbox" />
-          <span>全体図に表示する</span>
-        </label>
-      </div>
-
-      <section class="dialog-section">
-        <div class="dialog-section-heading">
-          <h3>前提TODO</h3>
-          <span>完了してから着手するもの</span>
-        </div>
-        <div id="dependency-options" class="dependency-options"></div>
-      </section>
-
-      <section class="dialog-section">
-        <div class="dialog-section-heading">
-          <h3>チェック項目</h3>
-          <button id="add-checklist-dialog" class="small-button" type="button">＋ 追加</button>
-        </div>
-        <div id="dialog-checklist" class="dialog-checklist"></div>
-      </section>
-
-      <div class="dialog-footer">
-        <button id="delete-task-button" class="danger-button" type="button">削除</button>
-        <div class="dialog-footer-right">
-          <button value="cancel" class="secondary-button" type="submit">キャンセル</button>
-          <button id="save-task-button" value="default" class="primary-button" type="submit">保存</button>
-        </div>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="export-dialog" class="export-dialog">
+  <dialog id="data-dialog" class="app-dialog">
     <form method="dialog">
-      <div class="dialog-header">
-        <div>
-          <div class="section-kicker">IMPORT / EXPORT</div>
-          <h2>データの入出力</h2>
-        </div>
-        <button class="icon-button" value="cancel" aria-label="閉じる">×</button>
-      </div>
-      <div class="export-grid">
-        <button id="export-json" class="export-card" type="button">
-          <strong>JSONを書き出す</strong>
-          <span>完全なバックアップ</span>
-        </button>
-        <button id="export-yaml" class="export-card" type="button">
-          <strong>YAMLを書き出す</strong>
-          <span>読みやすい一括編集用</span>
-        </button>
-        <label class="export-card file-card">
-          <strong>ファイルを読み込む</strong>
-          <span>JSON / YAML</span>
-          <input id="import-file" type="file" accept=".json,.yaml,.yml,application/json,text/yaml" />
-        </label>
-      </div>
-      <div class="dialog-footer compact">
-        <button value="cancel" class="secondary-button">閉じる</button>
+      <header><div><span>DATA</span><h2>データの入出力</h2></div><button value="cancel" aria-label="閉じる">×</button></header>
+      <div class="dialog-grid">
+        <button id="export-json" type="button"><strong>JSONを書き出す</strong><span>完全なバックアップ</span></button>
+        <button id="export-yaml" type="button"><strong>YAMLを書き出す</strong><span>読みやすい一括編集用</span></button>
+        <label><strong>ファイルを読み込む</strong><span>JSON / YAML</span><input id="import-file" type="file" accept=".json,.yaml,.yml" /></label>
+        <button id="reset-sample" type="button"><strong>サンプルへ戻す</strong><span>現在の内容を初期化</span></button>
       </div>
     </form>
   </dialog>
 
-  <template id="task-row-template">
-    <div class="task-row">
-      <button class="drag-handle" type="button" tabindex="-1" aria-hidden="true">⠿</button>
-      <input class="task-complete" type="checkbox" />
-      <button class="task-title-button" type="button"></button>
-      <span class="task-checklist-progress"></span>
-      <span class="task-due-label"></span>
-      <span class="task-assignee-label"></span>
-      <span class="task-dependency-label"></span>
-      <span class="task-status-label"></span>
-      <button class="task-menu-button" type="button" aria-label="TODOを編集">•••</button>
-    </div>
-  </template>
+  <div id="toast-region" class="toast-region" aria-live="polite"></div>
+  <section id="print-sheet" class="print-sheet" aria-hidden="true"></section>
 </body>
 </html>
