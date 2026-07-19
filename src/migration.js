@@ -75,7 +75,10 @@ async function persistStateImmediately(nextState) {
 
 async function flushStateSave() {
   clearTimeout(saveTimer);
-  if (!pendingStateSnapshot) return indexedDbSaveChain;
+  if (!pendingStateSnapshot) {
+    await indexedDbSaveChain.catch(() => undefined);
+    return;
+  }
   const nextSnapshot = pendingStateSnapshot;
   pendingStateSnapshot = null;
   const operation = indexedDbSaveChain
@@ -89,7 +92,6 @@ async function flushStateSave() {
     console.error('[Flowmap] IndexedDB save failed', error);
     updateSaveIndicator('保存失敗', error.message || 'IndexedDBへの保存に失敗しました');
   }
-  return operation;
 }
 
 saveState = function saveStateToIndexedDb() {
