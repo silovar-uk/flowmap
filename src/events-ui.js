@@ -11,7 +11,7 @@ function bindEvents() {
   els['data-button'].addEventListener('click',()=>els['data-dialog'].showModal());els['print-button'].addEventListener('click',()=>{renderPrint();window.print();});
   els['collapse-navigator'].addEventListener('click',()=>{state.settings.navigatorOpen=false;saveState();renderAll();});els['open-navigator'].addEventListener('click',()=>{state.settings.navigatorOpen=true;saveState();renderAll();});
   els['close-inspector'].addEventListener('click',()=>{state.settings.inspectorOpen=false;saveState();renderAll();});els['open-inspector'].addEventListener('click',()=>{state.settings.inspectorOpen=true;saveState();renderAll();});
-  els.stage.addEventListener('dblclick',(event)=>{if(event.target.closest('.sticky-note,.group-card,.phase-card'))return;const p=screenToWorld(event.clientX,event.clientY);addNoteMutation(p.x-112,p.y-58);});
+  els.stage.addEventListener('dblclick',(event)=>{if(!event.target.closest('.sticky-note'))event.preventDefault();});
   els.stage.addEventListener('wheel',(event)=>{event.preventDefault();zoomAt(event.deltaY<0?1.08:1/1.08,event.clientX,event.clientY);},{passive:false});
   els.stage.addEventListener('pointerdown',(event)=>{if(beginPan(event))return;if(event.target===els.stage||event.target===els.world){clearSelection();}});
   document.addEventListener('pointermove',handlePointerMove);document.addEventListener('pointerup',handlePointerUp);
