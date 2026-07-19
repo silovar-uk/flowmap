@@ -1,13 +1,12 @@
 /* Flowmap v0.16 — intentional canvas add mode */
 .board.is-canvas-add-mode .stage { cursor: crosshair; }
 .board.is-canvas-add-mode .sticky-note,
-.board.is-canvas-add-mode .group-header,
+.board.is-canvas-add-mode .group-header { cursor: grab; }
 .board.is-canvas-add-mode button,
+.board.is-canvas-add-mode select { cursor: pointer; }
 .board.is-canvas-add-mode input,
 .board.is-canvas-add-mode textarea,
-.board.is-canvas-add-mode select { cursor: inherit; }
-.board.is-canvas-add-mode .sticky-note,
-.board.is-canvas-add-mode .group-header { cursor: grab; }
+.board.is-canvas-add-mode [contenteditable="true"] { cursor: text; }
 
 .canvas-add-preview {
   position: absolute;
