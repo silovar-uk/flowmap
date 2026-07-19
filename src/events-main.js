@@ -24,8 +24,8 @@ function updatePanGuidance(){
   const connectShortcut=shortcuts.find((item)=>item.textContent.includes('右端の点'));
   if(connectShortcut)connectShortcut.innerHTML='<kbd>上下左右の点をドラッグ</kbd><span>直角に接続。空白へ離すと処理を追加</span>';
   const badge=document.querySelector('.version-badge');
-  if(badge)badge.textContent='v0.9.0';
-  els['save-indicator'].title='IndexedDBに保存';
+  if(badge)badge.textContent='v0.10.0';
+  els['save-indicator'].title='IndexedDBへ自動保存';
 }
 
 const baseFinalizeNoteDrop = finalizeNoteDrop;
@@ -72,14 +72,21 @@ async function init(){
   }
   updatePanGuidance();
   installFlowchartUi();
+  installWorkspaceManagement();
   bindEvents();
   renderAll();
   saveState();
+  updateBoardManagementState();
   requestAnimationFrame(()=>fitView());
+  void maybeStartTutorial();
   window.Flowmap={
     getState:()=>clone(state),
     reset:()=>{state=normalizeFlowchartState(initialState());saveState();renderAll();},
-    storage:{flush:()=>flushStateSave()}
+    storage:{
+      flush:()=>flushStateSave(),
+      list:()=>listSavedBoards(),
+      active:()=>getActiveBoardInfo()
+    }
   };
 }
 
