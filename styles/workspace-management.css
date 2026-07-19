@@ -38,7 +38,7 @@
 .tutorial-card p { margin: 0; color: var(--text); font-size: 12px; line-height: 1.7; }
 .tutorial-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 15px; }
 .tutorial-actions .button { min-width: 84px; justify-content: center; }
-.tutorial-target { position: relative; z-index: 182 !important; }
+.connector-handle.tutorial-target { opacity: 1 !important; }
 @media (max-width: 1180px) {
   .management-label { display: none; }
   .management-button { width: 36px; padding: 0; justify-content: center; }
