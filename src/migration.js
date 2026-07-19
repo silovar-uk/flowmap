@@ -1,18 +1,32 @@
-/* Flowmap v0.9 — IndexedDB persistence and legacy migration */
+/* Flowmap v0.10 — IndexedDB boards, autosave and legacy migration */
 const FLOWMAP_DB_NAME = 'flowmap';
-const FLOWMAP_DB_VERSION = 1;
+const FLOWMAP_DB_VERSION = 2;
 const FLOWMAP_BOARD_STORE = 'boards';
-const FLOWMAP_CURRENT_BOARD_ID = 'current';
+const FLOWMAP_META_STORE = 'meta';
+const FLOWMAP_LEGACY_CURRENT_ID = 'current';
+const FLOWMAP_ACTIVE_BOARD_KEY = 'activeBoardId';
+const FLOWMAP_TUTORIAL_KEY = 'tutorialSeen';
 
 let flowmapDbPromise = null;
 let indexedDbSaveChain = Promise.resolve();
 let pendingStateSnapshot = null;
+let activeBoardId = null;
+let activeBoardName = '無題のボード';
 
-function updateSaveIndicator(message, title = 'IndexedDBに保存') {
+function updateSaveIndicator(message, title = 'IndexedDBへ自動保存') {
   const indicator = els['save-indicator'];
   if (!indicator) return;
   indicator.textContent = message;
   indicator.title = title;
+}
+
+function createBoardId() {
+  return uid('board');
+}
+
+function normalizeBoardName(value, fallback = '無題のボード') {
+  const name = String(value || '').trim().replace(/\s+/g, ' ');
+  return name.slice(0, 80) || fallback;
 }
 
 function openFlowmapDatabase() {
@@ -25,9 +39,15 @@ function openFlowmapDatabase() {
     const request = indexedDB.open(FLOWMAP_DB_NAME, FLOWMAP_DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
+      let boardStore;
       if (!db.objectStoreNames.contains(FLOWMAP_BOARD_STORE)) {
-        const store = db.createObjectStore(FLOWMAP_BOARD_STORE, { keyPath: 'id' });
-        store.createIndex('updatedAt', 'updatedAt');
+        boardStore = db.createObjectStore(FLOWMAP_BOARD_STORE, { keyPath: 'id' });
+      } else {
+        boardStore = request.transaction.objectStore(FLOWMAP_BOARD_STORE);
+      }
+      if (!boardStore.indexNames.contains('updatedAt')) boardStore.createIndex('updatedAt', 'updatedAt');
+      if (!db.objectStoreNames.contains(FLOWMAP_META_STORE)) {
+        db.createObjectStore(FLOWMAP_META_STORE, { keyPath: 'key' });
       }
     };
     request.onsuccess = () => {
@@ -48,29 +68,91 @@ function indexedDbRequest(request) {
   });
 }
 
-async function readStateFromIndexedDb() {
+async function getStoreRecord(storeName, key) {
   const db = await openFlowmapDatabase();
-  const transaction = db.transaction(FLOWMAP_BOARD_STORE, 'readonly');
-  const store = transaction.objectStore(FLOWMAP_BOARD_STORE);
-  const record = await indexedDbRequest(store.get(FLOWMAP_CURRENT_BOARD_ID));
-  return record?.state || null;
+  const transaction = db.transaction(storeName, 'readonly');
+  return indexedDbRequest(transaction.objectStore(storeName).get(key));
 }
 
-async function persistStateImmediately(nextState) {
+async function getAllStoreRecords(storeName) {
   const db = await openFlowmapDatabase();
-  const transaction = db.transaction(FLOWMAP_BOARD_STORE, 'readwrite');
-  const store = transaction.objectStore(FLOWMAP_BOARD_STORE);
-  store.put({
-    id: FLOWMAP_CURRENT_BOARD_ID,
-    state: clone(nextState),
-    updatedAt: new Date().toISOString(),
-    schemaVersion: 1
-  });
+  const transaction = db.transaction(storeName, 'readonly');
+  return indexedDbRequest(transaction.objectStore(storeName).getAll());
+}
+
+async function putStoreRecord(storeName, value) {
+  const db = await openFlowmapDatabase();
+  const transaction = db.transaction(storeName, 'readwrite');
+  transaction.objectStore(storeName).put(value);
   await new Promise((resolve, reject) => {
     transaction.oncomplete = resolve;
     transaction.onerror = () => reject(transaction.error || new Error('IndexedDBへの保存に失敗しました'));
     transaction.onabort = () => reject(transaction.error || new Error('IndexedDBへの保存が中断されました'));
   });
+  return value;
+}
+
+async function deleteStoreRecord(storeName, key) {
+  const db = await openFlowmapDatabase();
+  const transaction = db.transaction(storeName, 'readwrite');
+  transaction.objectStore(storeName).delete(key);
+  await new Promise((resolve, reject) => {
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error || new Error('IndexedDBから削除できませんでした'));
+    transaction.onabort = () => reject(transaction.error || new Error('IndexedDBの削除が中断されました'));
+  });
+}
+
+async function getFlowmapMeta(key) {
+  const record = await getStoreRecord(FLOWMAP_META_STORE, key);
+  return record?.value;
+}
+
+async function setFlowmapMeta(key, value) {
+  await putStoreRecord(FLOWMAP_META_STORE, { key, value, updatedAt: new Date().toISOString() });
+}
+
+function blankBoardState() {
+  const next = initialState();
+  next.phases = [];
+  next.groups = [];
+  next.notes = [];
+  next.edges = [];
+  next.viewport = { x: 40, y: 40, scale: 1 };
+  next.activity = [{ id: uid('activity'), at: new Date().toISOString(), label: '新しいボードを作成', noteId: null }];
+  next.settings = {
+    grid: state?.settings?.grid !== false,
+    navigatorOpen: state?.settings?.navigatorOpen !== false,
+    inspectorOpen: state?.settings?.inspectorOpen !== false
+  };
+  return typeof normalizeFlowchartState === 'function' ? normalizeFlowchartState(next) : next;
+}
+
+function boardRecordName(record) {
+  return normalizeBoardName(record?.name, record?.id === FLOWMAP_LEGACY_CURRENT_ID ? '移行したボード' : '無題のボード');
+}
+
+async function persistStateImmediately(nextState, options = {}) {
+  const boardId = options.boardId || activeBoardId || createBoardId();
+  const existing = await getStoreRecord(FLOWMAP_BOARD_STORE, boardId);
+  const now = new Date().toISOString();
+  const record = {
+    id: boardId,
+    name: normalizeBoardName(options.name, existing ? boardRecordName(existing) : activeBoardName),
+    state: clone(nextState),
+    createdAt: existing?.createdAt || now,
+    updatedAt: now,
+    schemaVersion: 2
+  };
+  await putStoreRecord(FLOWMAP_BOARD_STORE, record);
+  if (!activeBoardId || options.activate) {
+    activeBoardId = boardId;
+    activeBoardName = record.name;
+    await setFlowmapMeta(FLOWMAP_ACTIVE_BOARD_KEY, boardId);
+  } else if (boardId === activeBoardId) {
+    activeBoardName = record.name;
+  }
+  return record;
 }
 
 async function flushStateSave() {
@@ -79,11 +161,11 @@ async function flushStateSave() {
     await indexedDbSaveChain.catch(() => undefined);
     return;
   }
-  const nextSnapshot = pendingStateSnapshot;
+  const pending = pendingStateSnapshot;
   pendingStateSnapshot = null;
   const operation = indexedDbSaveChain
     .catch(() => undefined)
-    .then(() => persistStateImmediately(nextSnapshot));
+    .then(() => persistStateImmediately(pending.state, { boardId: pending.boardId, name: pending.name }));
   indexedDbSaveChain = operation;
   try {
     await operation;
@@ -96,8 +178,9 @@ async function flushStateSave() {
 
 saveState = function saveStateToIndexedDb() {
   if (!state) return;
+  if (!activeBoardId) activeBoardId = createBoardId();
   clearTimeout(saveTimer);
-  pendingStateSnapshot = clone(state);
+  pendingStateSnapshot = { boardId: activeBoardId, name: activeBoardName, state: clone(state) };
   updateSaveIndicator('保存中…');
   saveTimer = setTimeout(() => { void flushStateSave(); }, 140);
 };
@@ -160,14 +243,40 @@ function normalizeLegacyState(parsed) {
   };
 }
 
-loadState = async function loadStateFromIndexedDb() {
-  try {
-    const stored = await readStateFromIndexedDb();
-    if (stored && Array.isArray(stored.notes)) return stored;
-  } catch (error) {
-    console.warn('[Flowmap] IndexedDB restore failed', error);
-  }
+async function normalizeStoredBoardRecord(record) {
+  if (!record?.state || !Array.isArray(record.state.notes)) return null;
+  const normalized = {
+    ...record,
+    name: boardRecordName(record),
+    createdAt: record.createdAt || record.updatedAt || new Date().toISOString(),
+    updatedAt: record.updatedAt || new Date().toISOString(),
+    schemaVersion: 2
+  };
+  if (JSON.stringify(normalized) !== JSON.stringify(record)) await putStoreRecord(FLOWMAP_BOARD_STORE, normalized);
+  return normalized;
+}
 
+async function resolveActiveBoardRecord() {
+  const preferredId = await getFlowmapMeta(FLOWMAP_ACTIVE_BOARD_KEY);
+  if (preferredId) {
+    const preferred = await normalizeStoredBoardRecord(await getStoreRecord(FLOWMAP_BOARD_STORE, preferredId));
+    if (preferred) return preferred;
+  }
+  const legacyCurrent = await normalizeStoredBoardRecord(await getStoreRecord(FLOWMAP_BOARD_STORE, FLOWMAP_LEGACY_CURRENT_ID));
+  if (legacyCurrent) {
+    await setFlowmapMeta(FLOWMAP_ACTIVE_BOARD_KEY, legacyCurrent.id);
+    return legacyCurrent;
+  }
+  const records = (await getAllStoreRecords(FLOWMAP_BOARD_STORE))
+    .filter((record) => record?.state && Array.isArray(record.state.notes))
+    .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+  if (!records.length) return null;
+  const record = await normalizeStoredBoardRecord(records[0]);
+  await setFlowmapMeta(FLOWMAP_ACTIVE_BOARD_KEY, record.id);
+  return record;
+}
+
+async function migrateLocalStorageBoard() {
   for (const key of [STORAGE_KEY, 'flowmap:v6', 'flowmap:v5', 'flowmap:v4', 'flowmap']) {
     try {
       const raw = localStorage.getItem(key);
@@ -177,15 +286,129 @@ loadState = async function loadStateFromIndexedDb() {
         ? parsed
         : normalizeLegacyState(parsed);
       if (!migrated) continue;
-      await persistStateImmediately(migrated);
+      const boardId = createBoardId();
+      const record = await persistStateImmediately(migrated, { boardId, name: '移行したボード', activate: true });
       console.info(`[Flowmap] Migrated ${key} from localStorage to IndexedDB`);
-      return migrated;
+      return record;
     } catch (error) {
       console.warn(`[Flowmap] Failed to migrate ${key}`, error);
     }
   }
   return null;
+}
+
+loadState = async function loadStateFromIndexedDb() {
+  try {
+    let record = await resolveActiveBoardRecord();
+    if (!record) record = await migrateLocalStorageBoard();
+    if (!record) {
+      const boardId = createBoardId();
+      record = await persistStateImmediately(initialState(), { boardId, name: 'マイボード', activate: true });
+    }
+    activeBoardId = record.id;
+    activeBoardName = boardRecordName(record);
+    await setFlowmapMeta(FLOWMAP_ACTIVE_BOARD_KEY, activeBoardId);
+    return record.state;
+  } catch (error) {
+    console.warn('[Flowmap] IndexedDB restore failed', error);
+    throw error;
+  }
 };
+
+async function listSavedBoards() {
+  await flushStateSave();
+  const records = await getAllStoreRecords(FLOWMAP_BOARD_STORE);
+  return records
+    .filter((record) => record?.state && Array.isArray(record.state.notes))
+    .map((record) => ({ ...record, name: boardRecordName(record), active: record.id === activeBoardId }))
+    .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+}
+
+function getActiveBoardInfo() {
+  return { id: activeBoardId, name: activeBoardName };
+}
+
+async function saveActiveBoardName(name) {
+  activeBoardName = normalizeBoardName(name, activeBoardName);
+  const record = await persistStateImmediately(state, { boardId: activeBoardId, name: activeBoardName });
+  updateSaveIndicator('保存済み', `${record.name}をIndexedDBへ保存しました`);
+  return record;
+}
+
+async function switchToBoardRecord(record) {
+  activeBoardId = record.id;
+  activeBoardName = boardRecordName(record);
+  await setFlowmapMeta(FLOWMAP_ACTIVE_BOARD_KEY, activeBoardId);
+  state = typeof normalizeFlowchartState === 'function' ? normalizeFlowchartState(clone(record.state)) : clone(record.state);
+  selection = { type: null, id: null };
+  undoStack.length = 0;
+  redoStack.length = 0;
+  renderAll();
+  updateSaveIndicator('保存済み', `${activeBoardName}を開いています`);
+  return record;
+}
+
+async function openSavedBoard(boardId) {
+  await flushStateSave();
+  const record = await normalizeStoredBoardRecord(await getStoreRecord(FLOWMAP_BOARD_STORE, boardId));
+  if (!record) throw new Error('保存したボードが見つかりません');
+  return switchToBoardRecord(record);
+}
+
+async function createSavedBoard(name = '新しいボード') {
+  await flushStateSave();
+  const boardId = createBoardId();
+  const record = await persistStateImmediately(blankBoardState(), { boardId, name: normalizeBoardName(name, '新しいボード'), activate: true });
+  return switchToBoardRecord(record);
+}
+
+async function renameSavedBoard(boardId, name) {
+  await flushStateSave();
+  const record = await normalizeStoredBoardRecord(await getStoreRecord(FLOWMAP_BOARD_STORE, boardId));
+  if (!record) throw new Error('保存したボードが見つかりません');
+  record.name = normalizeBoardName(name, record.name);
+  record.updatedAt = new Date().toISOString();
+  await putStoreRecord(FLOWMAP_BOARD_STORE, record);
+  if (boardId === activeBoardId) activeBoardName = record.name;
+  return record;
+}
+
+async function duplicateSavedBoard(boardId) {
+  await flushStateSave();
+  const source = await normalizeStoredBoardRecord(await getStoreRecord(FLOWMAP_BOARD_STORE, boardId));
+  if (!source) throw new Error('複製するボードが見つかりません');
+  const newId = createBoardId();
+  return persistStateImmediately(source.state, { boardId: newId, name: `${source.name} のコピー` });
+}
+
+async function deleteSavedBoard(boardId) {
+  await flushStateSave();
+  await deleteStoreRecord(FLOWMAP_BOARD_STORE, boardId);
+  if (boardId !== activeBoardId) return null;
+  const remaining = (await getAllStoreRecords(FLOWMAP_BOARD_STORE))
+    .filter((record) => record?.state && Array.isArray(record.state.notes))
+    .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+  if (remaining.length) return switchToBoardRecord(await normalizeStoredBoardRecord(remaining[0]));
+  return createSavedBoard('新しいボード');
+}
+
+async function clearActiveBoard() {
+  state = blankBoardState();
+  selection = { type: null, id: null };
+  undoStack.length = 0;
+  redoStack.length = 0;
+  saveState();
+  renderAll();
+  await flushStateSave();
+}
+
+async function hasSeenTutorial() {
+  return Boolean(await getFlowmapMeta(FLOWMAP_TUTORIAL_KEY));
+}
+
+async function markTutorialSeen() {
+  await setFlowmapMeta(FLOWMAP_TUTORIAL_KEY, true);
+}
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') void flushStateSave();
