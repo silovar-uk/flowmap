@@ -202,6 +202,7 @@ function groupSelectedNotes() {
   if (x + w > WORLD.width) x = Math.max(0, WORLD.width - w);
   if (y + h > WORLD.height) y = Math.max(0, WORLD.height - h);
   const groupId = uid('group');
+  if (typeof stopFlowPlayback === 'function') stopFlowPlayback({ keepFocus: false, render: false });
   mutate('選択した図形を囲みにまとめる', () => {
     state.groups.push({
       id: groupId,
@@ -265,9 +266,10 @@ function openGroupListPopover(groupId, anchor) {
   popover.innerHTML = `<header><div><span>囲みの内容</span><strong>${esc(group.title)}</strong></div><button type="button" data-close-group-list aria-label="閉じる">×</button></header><div class="group-list-summary">${stats.done}/${stats.total}完了</div><div class="group-list-rows">${rows}</div>`;
   document.body.append(popover);
   const rect = anchor.getBoundingClientRect();
-  const width = 310;
-  const left = clamp(rect.right + 8, 8, window.innerWidth - width - 8);
-  const top = clamp(rect.top, 8, window.innerHeight - Math.min(430, popover.offsetHeight) - 8);
+  const width = Math.min(310, window.innerWidth - 16);
+  const left = clamp(rect.right + 8, 8, Math.max(8, window.innerWidth - width - 8));
+  const maxTop = Math.max(8, window.innerHeight - Math.min(430, popover.offsetHeight) - 8);
+  const top = clamp(rect.top, 8, maxTop);
   Object.assign(popover.style, { left: `${left}px`, top: `${top}px`, width: `${width}px` });
   openGroupListId = groupId;
 }
