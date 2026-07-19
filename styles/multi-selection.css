@@ -1,0 +1,90 @@
+/* Flowmap v0.15 — multiple selection */
+.stage.is-marquee-selecting { cursor: crosshair; }
+.multi-selection-marquee {
+  position: absolute;
+  z-index: 34;
+  border: 1.5px solid rgba(61, 101, 174, .88);
+  border-radius: 5px;
+  background: rgba(79, 122, 197, .10);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .55) inset;
+  pointer-events: none;
+}
+.multi-selection-outline {
+  position: absolute;
+  z-index: 12;
+  border: 1.5px dashed rgba(57, 94, 158, .64);
+  border-radius: 12px;
+  background: rgba(71, 112, 184, .025);
+  pointer-events: none;
+}
+.sticky-note.is-multi-selected {
+  border-color: #6f8fc6;
+  box-shadow: 0 0 0 3px rgba(65, 103, 173, .12), 0 4px 12px rgba(43, 56, 47, .10);
+}
+.sticky-note.is-multi-primary {
+  border-color: #315fae;
+  box-shadow: 0 0 0 4px rgba(49, 95, 174, .16), 0 5px 14px rgba(43, 56, 47, .12);
+}
+.node-type-decision.is-multi-selected::before,
+.node-type-input.is-multi-selected::before,
+.node-type-document.is-multi-selected::before { background: #6f8fc6; }
+.node-type-decision.is-multi-primary::before,
+.node-type-input.is-multi-primary::before,
+.node-type-document.is-multi-primary::before { background: #315fae; }
+.tree-node.is-multi-selected {
+  color: #294f91;
+  background: rgba(229, 237, 251, .86);
+  box-shadow: inset 3px 0 #7392c8;
+}
+.multi-selection-toolbar {
+  position: absolute;
+  z-index: 31;
+  left: 50%;
+  bottom: 64px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 6px 7px 6px 12px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(161, 176, 166, .86);
+  border-radius: 12px;
+  background: rgba(255, 255, 252, .96);
+  box-shadow: 0 12px 34px rgba(39, 52, 43, .16);
+  backdrop-filter: blur(12px);
+}
+.multi-selection-toolbar[hidden] { display: none !important; }
+.multi-selection-toolbar strong {
+  min-width: 82px;
+  color: #435048;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.multi-selection-toolbar button {
+  min-height: 31px;
+  padding: 0 10px;
+  border: 1px solid #c6d0c9;
+  border-radius: 7px;
+  background: #f6f8f4;
+  color: #526159;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.multi-selection-toolbar .multi-group-button {
+  border-color: #315fae;
+  background: #3f6fbd;
+  color: #fff;
+}
+.multi-selection-toolbar .multi-group-button:hover { background: #315fae; }
+.multi-selection-toolbar .multi-clear-button:hover { background: #ecefea; }
+
+@media (max-width: 820px) {
+  .multi-selection-toolbar {
+    right: 10px;
+    bottom: 128px;
+    left: 10px;
+    justify-content: center;
+    transform: none;
+  }
+}
