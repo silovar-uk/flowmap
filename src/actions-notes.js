@@ -22,7 +22,11 @@ function addNoteMutation(x, y, options = {}) {
 function addSibling(noteId, editMode = 'default') {
   const base = getNote(noteId);
   if (!base) return;
-  return addNoteMutation(base.x, base.y + 150, { editMode });
+  return addNoteMutation(base.x, base.y + 150, {
+    connectFrom: base.id,
+    editMode,
+    label: '次の処理を追加して接続'
+  });
 }
 
 function addChild(noteId, editMode = 'default') {
