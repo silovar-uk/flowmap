@@ -1,24 +1,31 @@
 function autoLayout() {
   mutate('全体を整列', () => {
-    const phaseW = 700;
+    const phaseW = 720;
+    const phaseStep = 790;
     state.phases.forEach((phase, phaseIndex) => {
-      phase.x = 40 + phaseIndex * 750; phase.y = 40; phase.w = phaseW; phase.h = 1250;
+      phase.x = 40 + phaseIndex * phaseStep;
+      phase.y = 40;
+      phase.w = phaseW;
+      phase.h = 1320;
       const groups = state.groups.filter((group) => group.phaseId === phase.id);
-      let gy = 105;
+      let gy = phase.y + 72;
       groups.forEach((group) => {
         const notes = state.notes.filter((item) => item.groupId === group.id);
         const rows = Math.max(1, Math.ceil(notes.length / 2));
-        group.x = phase.x + 40; group.y = gy; group.w = 610; group.h = 70 + rows * 150;
+        group.x = phase.x + 44;
+        group.y = gy;
+        group.w = 632;
+        group.h = 84 + rows * 164;
         notes.forEach((item, index) => {
-          item.x = group.x + 35 + (index % 2) * 270;
-          item.y = group.y + 58 + Math.floor(index / 2) * 145;
+          item.x = group.x + 42 + (index % 2) * 292;
+          item.y = group.y + 64 + Math.floor(index / 2) * 164;
           item.phaseId = phase.id;
         });
-        gy += group.h + 34;
+        gy += group.h + 44;
       });
       state.notes.filter((item) => item.phaseId === phase.id && !item.groupId).forEach((item, index) => {
-        item.x = phase.x + 60 + (index % 2) * 270;
-        item.y = gy + Math.floor(index / 2) * 145;
+        item.x = phase.x + 86 + (index % 2) * 292;
+        item.y = gy + 20 + Math.floor(index / 2) * 164;
       });
     });
   });
@@ -27,25 +34,33 @@ function autoLayout() {
 
 function fitView(targetNoteId = null) {
   const rect = els.stage.getBoundingClientRect();
+  const framePadding = clamp(Math.min(rect.width, rect.height) * .09, 76, 128);
   let bounds;
   if (targetNoteId) {
     const item = getNote(targetNoteId);
     if (!item) return;
-    bounds = { minX:item.x-120, minY:item.y-100, maxX:item.x+item.w+120, maxY:item.y+item.h+100 };
+    const size = noteDisplaySize(item);
+    bounds = {
+      minX: item.x - 150,
+      minY: item.y - 125,
+      maxX: item.x + size.w + 150,
+      maxY: item.y + size.h + 125
+    };
   } else {
     const objects = [
       ...state.notes.map((item) => ({ x:item.x,y:item.y,w:noteDisplaySize(item).w,h:noteDisplaySize(item).h })),
-      ...state.groups.map((item) => ({ x:item.x,y:item.y,w:item.w,h:item.collapsed ? 38 : item.h }))
+      ...state.groups.map((item) => ({ x:item.x,y:item.y,w:item.w,h:item.collapsed ? 40 : item.h }))
     ];
     if (!objects.length) return;
     bounds = {
-      minX: Math.min(...objects.map((item) => item.x)) - 80,
-      minY: Math.min(...objects.map((item) => item.y)) - 80,
-      maxX: Math.max(...objects.map((item) => item.x + item.w)) + 80,
-      maxY: Math.max(...objects.map((item) => item.y + item.h)) + 80
+      minX: Math.min(...objects.map((item) => item.x)) - framePadding,
+      minY: Math.min(...objects.map((item) => item.y)) - framePadding,
+      maxX: Math.max(...objects.map((item) => item.x + item.w)) + framePadding,
+      maxY: Math.max(...objects.map((item) => item.y + item.h)) + framePadding
     };
   }
-  const scale = clamp(Math.min(rect.width / (bounds.maxX-bounds.minX), rect.height / (bounds.maxY-bounds.minY)), .28, 1.35);
+  const maxScale = targetNoteId ? 1.22 : 1.16;
+  const scale = clamp(Math.min(rect.width / (bounds.maxX-bounds.minX), rect.height / (bounds.maxY-bounds.minY)), .28, maxScale);
   state.viewport.scale = scale;
   state.viewport.x = (rect.width - (bounds.maxX-bounds.minX)*scale)/2 - bounds.minX*scale;
   state.viewport.y = (rect.height - (bounds.maxY-bounds.minY)*scale)/2 - bounds.minY*scale;
