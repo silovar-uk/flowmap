@@ -24,7 +24,8 @@ function updatePanGuidance(){
   const connectShortcut=shortcuts.find((item)=>item.textContent.includes('右端の点'));
   if(connectShortcut)connectShortcut.innerHTML='<kbd>上下左右の点をドラッグ</kbd><span>直角に接続。空白へ離すと処理を追加</span>';
   const badge=document.querySelector('.version-badge');
-  if(badge)badge.textContent='v0.8.1';
+  if(badge)badge.textContent='v0.9.0';
+  els['save-indicator'].title='IndexedDBに保存';
 }
 
 const baseFinalizeNoteDrop = finalizeNoteDrop;
@@ -58,15 +59,28 @@ finalizeNoteDrop = function finalizeFlowchartNoteDrop(noteId){
   recordActivity('図形を移動',noteId);
 };
 
-function init(){
+async function init(){
   cacheElements();
-  state=normalizeFlowchartState(loadState());
+  updateSaveIndicator('読み込み中…','IndexedDBから読み込んでいます');
+  try {
+    const restored=await loadState();
+    state=normalizeFlowchartState(restored||initialState());
+  } catch(error) {
+    console.error('[Flowmap] Startup restore failed',error);
+    state=normalizeFlowchartState(initialState());
+    updateSaveIndicator('復元失敗',error.message||'保存データを読み込めませんでした');
+  }
   updatePanGuidance();
   installFlowchartUi();
   bindEvents();
   renderAll();
+  saveState();
   requestAnimationFrame(()=>fitView());
-  window.Flowmap={getState:()=>clone(state),reset:()=>{state=initialState();state=normalizeFlowchartState(state);renderAll();}};
+  window.Flowmap={
+    getState:()=>clone(state),
+    reset:()=>{state=normalizeFlowchartState(initialState());saveState();renderAll();},
+    storage:{flush:()=>flushStateSave()}
+  };
 }
 
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{void init();});else void init();
