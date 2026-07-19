@@ -104,32 +104,9 @@ function cacheElements() {
   els.tabPanels = $$('.tab-panel');
 }
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return initialState();
-    const parsed = JSON.parse(raw);
-    if (!parsed || parsed.version !== 7 || !Array.isArray(parsed.notes)) return initialState();
-    return parsed;
-  } catch (error) {
-    console.warn('[Flowmap] Failed to restore state', error);
-    return initialState();
-  }
-}
-
-function saveState() {
-  clearTimeout(saveTimer);
-  els['save-indicator'].textContent = '保存中…';
-  saveTimer = setTimeout(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      els['save-indicator'].textContent = '保存済み';
-    } catch (error) {
-      console.error('[Flowmap] Save failed', error);
-      els['save-indicator'].textContent = '保存失敗';
-    }
-  }, 120);
-}
+/* Persistence is supplied by migration.js so core state management stays storage-agnostic. */
+async function loadState() { return null; }
+function saveState() {}
 
 function snapshot() {
   const copy = clone(state);
