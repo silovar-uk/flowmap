@@ -340,6 +340,14 @@ beginPan = function beginPanCanvasAdd(event) {
 const handlePointerUpBeforeCanvasAdd = handlePointerUp;
 handlePointerUp = function handlePointerUpCanvasAdd(event) {
   const pending = drag;
+  if (pending?.type === 'marquee' && !pending.moved) {
+    drag = null;
+    els.stage.classList.remove('is-marquee-selecting');
+    document.getElementById('multi-selection-marquee')?.remove();
+    if (typeof suppressClickAfterPan === 'function') suppressClickAfterPan();
+    if (!pending.additive) clearSelection();
+    return;
+  }
   if (pending?.type === 'pan' && pending.canvasClearOnClick) {
     const moved = pending.moved;
     handlePointerUpBeforeCanvasAdd(event);
