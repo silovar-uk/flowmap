@@ -61,7 +61,8 @@ function installMultiSelectionUi() {
   const hint = els['canvas-hint'];
   if (hint) hint.innerHTML = '<strong>空白をクリック</strong>して入力　・　ドラッグで範囲選択　・　Space＋ドラッグで移動';
   const helpGrid = els['help-dialog']?.querySelector('.shortcut-grid');
-  if (helpGrid && !helpGrid.querySelector('[data-shortcut="multi-select"]')) {
+  const hasMultiHelp = helpGrid && [...helpGrid.querySelectorAll('kbd')].some((item) => item.textContent.includes('Shift＋クリック'));
+  if (helpGrid && !hasMultiHelp) {
     const row = document.createElement('div');
     row.dataset.shortcut = 'multi-select';
     row.innerHTML = '<kbd>Shift＋クリック／範囲ドラッグ</kbd><span>複数の図形を選び、位置を変えずに囲みにする</span>';
@@ -244,12 +245,6 @@ function bindMultiSelectionEvents() {
   els['node-layer'].addEventListener('pointerdown', (event) => {
     const card = event.target.closest('.sticky-note');
     if (!card || !event.shiftKey || event.button !== 0 || event.target.closest('button,input,textarea,select,[contenteditable="true"]')) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-  }, true);
-  els['node-layer'].addEventListener('click', (event) => {
-    const card = event.target.closest('.sticky-note');
-    if (!card || !event.shiftKey || event.target.closest('button,input,textarea,select,[contenteditable="true"]')) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
