@@ -1,4 +1,105 @@
-/* Flowmap v0.7 legacy data migration */
+/* Flowmap v0.9 — IndexedDB persistence and legacy migration */
+const FLOWMAP_DB_NAME = 'flowmap';
+const FLOWMAP_DB_VERSION = 1;
+const FLOWMAP_BOARD_STORE = 'boards';
+const FLOWMAP_CURRENT_BOARD_ID = 'current';
+
+let flowmapDbPromise = null;
+let indexedDbSaveChain = Promise.resolve();
+let pendingStateSnapshot = null;
+
+function updateSaveIndicator(message, title = 'IndexedDBに保存') {
+  const indicator = els['save-indicator'];
+  if (!indicator) return;
+  indicator.textContent = message;
+  indicator.title = title;
+}
+
+function openFlowmapDatabase() {
+  if (flowmapDbPromise) return flowmapDbPromise;
+  flowmapDbPromise = new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) {
+      reject(new Error('このブラウザはIndexedDBに対応していません'));
+      return;
+    }
+    const request = indexedDB.open(FLOWMAP_DB_NAME, FLOWMAP_DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(FLOWMAP_BOARD_STORE)) {
+        const store = db.createObjectStore(FLOWMAP_BOARD_STORE, { keyPath: 'id' });
+        store.createIndex('updatedAt', 'updatedAt');
+      }
+    };
+    request.onsuccess = () => {
+      const db = request.result;
+      db.onversionchange = () => db.close();
+      resolve(db);
+    };
+    request.onerror = () => reject(request.error || new Error('IndexedDBを開けませんでした'));
+    request.onblocked = () => updateSaveIndicator('保存待機中', '別のタブでFlowmapが開かれています');
+  });
+  return flowmapDbPromise;
+}
+
+function indexedDbRequest(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('IndexedDBの処理に失敗しました'));
+  });
+}
+
+async function readStateFromIndexedDb() {
+  const db = await openFlowmapDatabase();
+  const transaction = db.transaction(FLOWMAP_BOARD_STORE, 'readonly');
+  const store = transaction.objectStore(FLOWMAP_BOARD_STORE);
+  const record = await indexedDbRequest(store.get(FLOWMAP_CURRENT_BOARD_ID));
+  return record?.state || null;
+}
+
+async function persistStateImmediately(nextState) {
+  const db = await openFlowmapDatabase();
+  const transaction = db.transaction(FLOWMAP_BOARD_STORE, 'readwrite');
+  const store = transaction.objectStore(FLOWMAP_BOARD_STORE);
+  store.put({
+    id: FLOWMAP_CURRENT_BOARD_ID,
+    state: clone(nextState),
+    updatedAt: new Date().toISOString(),
+    schemaVersion: 1
+  });
+  await new Promise((resolve, reject) => {
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error || new Error('IndexedDBへの保存に失敗しました'));
+    transaction.onabort = () => reject(transaction.error || new Error('IndexedDBへの保存が中断されました'));
+  });
+}
+
+async function flushStateSave() {
+  clearTimeout(saveTimer);
+  if (!pendingStateSnapshot) return indexedDbSaveChain;
+  const nextSnapshot = pendingStateSnapshot;
+  pendingStateSnapshot = null;
+  const operation = indexedDbSaveChain
+    .catch(() => undefined)
+    .then(() => persistStateImmediately(nextSnapshot));
+  indexedDbSaveChain = operation;
+  try {
+    await operation;
+    if (!pendingStateSnapshot) updateSaveIndicator('保存済み');
+  } catch (error) {
+    console.error('[Flowmap] IndexedDB save failed', error);
+    updateSaveIndicator('保存失敗', error.message || 'IndexedDBへの保存に失敗しました');
+  }
+  return operation;
+}
+
+saveState = function saveStateToIndexedDb() {
+  if (!state) return;
+  clearTimeout(saveTimer);
+  pendingStateSnapshot = clone(state);
+  updateSaveIndicator('保存中…');
+  saveTimer = setTimeout(() => { void flushStateSave(); }, 140);
+};
+
 function normalizeLegacyState(parsed) {
   if (!parsed || typeof parsed !== 'object') return null;
   const sourceNotes = parsed.notes || parsed.nodes || parsed.tasks;
@@ -31,6 +132,7 @@ function normalizeLegacyState(parsed) {
       x: Number(item.x ?? item.position?.x ?? 120 + (index % 4) * 260),
       y: Number(item.y ?? item.position?.y ?? 150 + Math.floor(index / 4) * 150),
       w: Number(item.w ?? item.width ?? 224), h: Number(item.h ?? item.height ?? 116), phaseId, groupId,
+      type: item.type || 'process',
       status: STATUS[item.status] ? item.status : (statusMap[item.status] || 'todo'),
       due: String(item.due || item.deadline || '').slice(0, 10), assignee: item.assignee || item.owner || '',
       tags: Array.isArray(rawTags) ? rawTags.map(String) : String(rawTags).split(',').map((value) => value.trim()).filter(Boolean),
@@ -45,7 +147,8 @@ function normalizeLegacyState(parsed) {
   const noteIds = new Set(notes.map((item) => item.id));
   const sourceEdges = parsed.edges || parsed.connections || [];
   const edges = (Array.isArray(sourceEdges) ? sourceEdges : []).map((item) => ({
-    id: item.id || uid('edge'), from: item.from || item.source || item.fromId, to: item.to || item.target || item.toId
+    id: item.id || uid('edge'), from: item.from || item.source || item.fromId, to: item.to || item.target || item.toId,
+    label: typeof item.label === 'string' ? item.label : ''
   })).filter((item) => noteIds.has(item.from) && noteIds.has(item.to) && item.from !== item.to);
   return {
     version: 7, phases, groups, notes, edges,
@@ -55,21 +158,34 @@ function normalizeLegacyState(parsed) {
   };
 }
 
-loadState = function loadState() {
+loadState = async function loadStateFromIndexedDb() {
+  try {
+    const stored = await readStateFromIndexedDb();
+    if (stored && Array.isArray(stored.notes)) return stored;
+  } catch (error) {
+    console.warn('[Flowmap] IndexedDB restore failed', error);
+  }
+
   for (const key of [STORAGE_KEY, 'flowmap:v6', 'flowmap:v5', 'flowmap:v4', 'flowmap']) {
     try {
       const raw = localStorage.getItem(key);
       if (!raw) continue;
       const parsed = JSON.parse(raw);
-      if (key === STORAGE_KEY && parsed?.version === 7 && Array.isArray(parsed.notes)) return parsed;
-      const migrated = normalizeLegacyState(parsed);
-      if (migrated) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-        return migrated;
-      }
+      const migrated = key === STORAGE_KEY && parsed?.version === 7 && Array.isArray(parsed.notes)
+        ? parsed
+        : normalizeLegacyState(parsed);
+      if (!migrated) continue;
+      await persistStateImmediately(migrated);
+      console.info(`[Flowmap] Migrated ${key} from localStorage to IndexedDB`);
+      return migrated;
     } catch (error) {
-      console.warn(`[Flowmap] Failed to restore ${key}`, error);
+      console.warn(`[Flowmap] Failed to migrate ${key}`, error);
     }
   }
-  return initialState();
+  return null;
 };
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') void flushStateSave();
+});
+window.addEventListener('pagehide', () => { void flushStateSave(); });
