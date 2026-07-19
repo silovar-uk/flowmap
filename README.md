@@ -2,9 +2,20 @@
 
 付箋と囲みを直接操作しながら、業務の流れ、前後関係、補足情報を整理するローカルWebアプリです。
 
-## v0.8.1
+## v0.9.0
 
-自由なホワイトボード操作と従来のフローチャート記法を残しつつ、実用密度を保ったまま画面全体の余白と配置間隔を見直しました。
+自由なホワイトボード操作、従来のフローチャート記法、実用密度を保った余白設計に加え、メインデータの保存先をlocalStorageからIndexedDBへ移行しました。
+
+## 保存方式
+
+- データはブラウザ内のIndexedDBデータベース`flowmap`へ保存
+- `boards`ストアの`current`レコードに、現在のボードを構造化データとして保持
+- 連続操作時は保存をまとめ、IndexedDBへの書き込みを順番に実行
+- タブを閉じる、または非表示になる際に未保存データを可能な限り即時保存
+- 保存状況はヘッダー右端に「保存中…／保存済み／保存失敗」と表示
+- 初回起動時に旧localStorageデータを検出した場合はIndexedDBへ自動移行
+- 移行後も旧localStorageデータは削除しない
+- JSON／YAMLの書き出し・読み込みは従来どおり利用可能
 
 ## フローチャート記法
 
@@ -88,7 +99,7 @@ styles/
   flowchart.css
 src/
   core.js
-  migration.js
+  migration.js       # IndexedDB保存と旧データ移行
   render-board.js
   render-inspector.js
   actions-notes.js
@@ -124,6 +135,6 @@ python -m http.server 8000
 
 `http://localhost:8000`を開きます。
 
-## データ
+## データ移行
 
-データはブラウザのlocalStorageに`flowmap:v7`として保存されます。v0.8では各図形に`type`、各矢印に`label`を追加しています。旧データにこれらがない場合は「処理」と空ラベルで補完します。`flowmap:v4`〜`v6`などの互換データも、元の保存領域を削除せずに可能な範囲で移行します。
+起動時は最初にIndexedDBを確認します。データがない場合のみ、`flowmap:v7`、`flowmap:v6`、`flowmap:v5`、`flowmap:v4`、`flowmap`の順でlocalStorageを確認し、見つかったデータをIndexedDBへコピーします。図形の`type`や矢印の`label`がない旧データは、それぞれ「処理」と空ラベルで補完します。
