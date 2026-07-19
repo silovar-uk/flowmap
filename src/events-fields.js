@@ -20,8 +20,8 @@ function bindInspectorFields(){
 function bindDataEvents(){
   els['export-json'].addEventListener('click',()=>download('flowmap.json',JSON.stringify(state,null,2),'application/json'));
   els['export-yaml'].addEventListener('click',()=>{if(!window.jsyaml)return toast('YAMLライブラリを読み込めませんでした');download('flowmap.yaml',window.jsyaml.dump(state,{noRefs:true,lineWidth:120}),'text/yaml');});
-  els['import-file'].addEventListener('change',async()=>{const file=els['import-file'].files[0];if(!file)return;try{const text=await file.text();const data=file.name.endsWith('.json')?JSON.parse(text):window.jsyaml.load(text);validateImport(data);undoStack.push(snapshot());state={...data,version:7};redoStack.length=0;selection={type:null,id:null};saveState();renderAll();els['data-dialog'].close();toast('データを読み込みました');}catch(error){console.error(error);toast('読み込みに失敗しました');}finally{els['import-file'].value='';}});
-  els['reset-sample'].addEventListener('click',()=>{undoStack.push(snapshot());state=initialState();redoStack.length=0;selection={type:null,id:null};saveState();renderAll();els['data-dialog'].close();toast('サンプルへ戻しました');});
+  els['import-file'].addEventListener('change',async()=>{const file=els['import-file'].files[0];if(!file)return;try{const text=await file.text();const data=file.name.endsWith('.json')?JSON.parse(text):window.jsyaml.load(text);validateImport(data);undoStack.push(snapshot());state=normalizeFlowchartState({...data,version:7});redoStack.length=0;selection={type:null,id:null};saveState();renderAll();els['data-dialog'].close();toast('データを読み込みました');}catch(error){console.error(error);toast('読み込みに失敗しました');}finally{els['import-file'].value='';}});
+  els['reset-sample'].addEventListener('click',()=>{undoStack.push(snapshot());state=normalizeFlowchartState(initialState());redoStack.length=0;selection={type:null,id:null};saveState();renderAll();els['data-dialog'].close();toast('サンプルへ戻しました');});
 }
 
 function validateImport(data){if(!data||!Array.isArray(data.notes)||!Array.isArray(data.edges)||!Array.isArray(data.groups)||!Array.isArray(data.phases))throw new Error('Invalid flowmap data');}
