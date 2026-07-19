@@ -285,7 +285,8 @@ function canvasAddInstallHelp() {
       if (description) description.textContent = 'ボードを移動';
     }
   });
-  if (!grid.querySelector('[data-shortcut="canvas-add"]')) {
+  const alreadyHasAdd = [...grid.querySelectorAll('kbd')].some((item) => item.textContent.includes('空白クリック') && (item.textContent.includes('Ctrl') || item.textContent.includes('Cmd')));
+  if (!alreadyHasAdd) {
     const add = document.createElement('div');
     add.dataset.shortcut = 'canvas-add';
     add.innerHTML = `<kbd>${CANVAS_ADD_IS_MAC ? 'Cmd' : 'Ctrl'}＋空白クリック</kbd><span>その位置へ処理を追加し、すぐタイトル入力</span>`;
@@ -306,11 +307,19 @@ function canvasAddCommit(placement) {
   }
   if (typeof stopFlowPlayback === 'function') stopFlowPlayback({ keepFocus: false, render: false });
   if (typeof selectedNoteIds !== 'undefined') selectedNoteIds.clear();
-  addNoteMutation(placement.x, placement.y, {
-    title: '新しい処理',
-    type: 'process',
-    label: 'キャンバスに処理を追加'
-  });
+  undoStack.push(snapshot());
+  if (undoStack.length > 80) undoStack.shift();
+  redoStack.length = 0;
+  const now = new Date().toISOString();
+  const group = placement.context.group;
+  const phaseId = group?.phaseId || placement.context.phase?.id || state.phases[0]?.id || '';
+  const item = note(uid('note'), '新しい処理', placement.x, placement.y, phaseId, group?.id || '', { type: 'process', now });
+  state.notes.push(item);
+  selection = { type: 'note', id: item.id };
+  recordActivity('キャンバスに処理を追加', item.id);
+  saveState();
+  renderAll();
+  requestAnimationFrame(() => startInlineEdit(item.id));
   return true;
 }
 
