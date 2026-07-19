@@ -1,0 +1,91 @@
+/* Flowmap v0.16 — intentional canvas add mode */
+.board.is-canvas-add-mode .stage { cursor: crosshair; }
+.board.is-canvas-add-mode .sticky-note,
+.board.is-canvas-add-mode .group-header,
+.board.is-canvas-add-mode button,
+.board.is-canvas-add-mode input,
+.board.is-canvas-add-mode textarea,
+.board.is-canvas-add-mode select { cursor: inherit; }
+.board.is-canvas-add-mode .sticky-note,
+.board.is-canvas-add-mode .group-header { cursor: grab; }
+
+.canvas-add-preview {
+  position: absolute;
+  z-index: 18;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 11px 12px 10px;
+  border: 1.5px dashed #668dce;
+  border-radius: 7px;
+  background: rgba(237, 243, 254, .78);
+  color: #36547f;
+  box-shadow: 0 10px 26px rgba(45, 67, 101, .15);
+  pointer-events: none;
+  user-select: none;
+  backdrop-filter: blur(2px);
+  animation: canvas-add-in .12s ease-out;
+}
+.canvas-add-preview > span {
+  color: #5872a2;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .05em;
+}
+.canvas-add-preview > strong {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.canvas-add-preview > small {
+  color: #72829d;
+  font-size: 8px;
+  font-weight: 750;
+}
+.canvas-add-preview.is-adjusted {
+  border-style: solid;
+  background: rgba(247, 249, 255, .9);
+}
+.canvas-add-preview.is-blocked {
+  border-color: #bd746b;
+  background: rgba(251, 235, 232, .9);
+  color: #8d4138;
+  box-shadow: 0 10px 26px rgba(119, 60, 52, .13);
+}
+.canvas-add-preview.is-blocked > span,
+.canvas-add-preview.is-blocked > small { color: #9a625b; }
+
+.canvas-add-guide {
+  position: absolute;
+  z-index: 15;
+  height: 1px;
+  transform-origin: 0 50%;
+  border-top: 1px dashed rgba(80, 111, 166, .72);
+  pointer-events: none;
+}
+.canvas-add-origin {
+  position: absolute;
+  z-index: 16;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border: 2px solid #668dce;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(102, 141, 206, .12);
+  pointer-events: none;
+}
+
+@keyframes canvas-add-in {
+  from { opacity: 0; transform: scale(.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-add-preview { animation: none; }
+}
+
+@media (max-width: 820px) {
+  .canvas-add-preview,
+  .canvas-add-guide,
+  .canvas-add-origin { display: none !important; }
+}
