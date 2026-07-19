@@ -329,12 +329,16 @@ beginPan = function beginPanCanvasAdd(event) {
   const addShortcut = event.button === 0 && event.pointerType !== 'touch' && blank && canvasAddModeAvailable() && canvasAddPrimaryFromEvent(event) && !spaceHeld;
   if (addShortcut) {
     v12CancelDraft();
+    const point = screenToWorld(event.clientX, event.clientY);
     canvasAddLastPointer = { clientX: event.clientX, clientY: event.clientY };
-    const placement = canvasAddResolvePlacement(event.clientX, event.clientY, event.altKey);
+    drag = {
+      type: 'canvas-add',
+      startX: point.x,
+      startY: point.y,
+      moved: false,
+      threshold: typeof v12PointThreshold === 'function' ? v12PointThreshold(event) : 8
+    };
     event.preventDefault();
-    if (typeof suppressClickAfterPan === 'function') suppressClickAfterPan();
-    canvasAddCommit(placement);
-    canvasAddSchedulePreview();
     return true;
   }
 
@@ -349,6 +353,18 @@ beginPan = function beginPanCanvasAdd(event) {
 const handlePointerUpBeforeCanvasAdd = handlePointerUp;
 handlePointerUp = function handlePointerUpCanvasAdd(event) {
   const pending = drag;
+  if (pending?.type === 'canvas-add') {
+    drag = null;
+    event.preventDefault();
+    if (typeof suppressClickAfterPan === 'function') suppressClickAfterPan();
+    const target = document.elementFromPoint(event.clientX, event.clientY);
+    if (!pending.moved && canvasAddBlankTarget(target)) {
+      const placement = canvasAddResolvePlacement(event.clientX, event.clientY, event.altKey);
+      canvasAddCommit(placement);
+    }
+    canvasAddSchedulePreview();
+    return;
+  }
   if (pending?.type === 'marquee' && !pending.moved) {
     drag = null;
     els.stage.classList.remove('is-marquee-selecting');
