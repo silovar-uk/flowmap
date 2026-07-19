@@ -49,5 +49,15 @@ bindWorkspaceManagementEvents = function bindWorkspaceManagementEventsV12() {
   document.addEventListener('flowmap:nodes-connected', handleTutorialActionV12);
 };
 
+/* The board menu consumes Escape before selection/editor shortcuts run. */
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !v12BoardMenuOpen) return;
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+  v12CloseBoardMenu();
+  document.getElementById('current-board-button')?.focus();
+}, true);
+
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { void init(); }, { once: true });
 else void init();
