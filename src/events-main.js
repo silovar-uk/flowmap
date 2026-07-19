@@ -24,7 +24,7 @@ function updatePanGuidance(){
   const connectShortcut=shortcuts.find((item)=>item.textContent.includes('右端の点'));
   if(connectShortcut)connectShortcut.innerHTML='<kbd>上下左右の点をドラッグ</kbd><span>直角に接続。空白へ離すと処理を追加</span>';
   const badge=document.querySelector('.version-badge');
-  if(badge)badge.textContent='v0.8.0';
+  if(badge)badge.textContent='v0.8.1';
 }
 
 const baseFinalizeNoteDrop = finalizeNoteDrop;
