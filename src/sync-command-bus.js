@@ -6,7 +6,7 @@ let syncUiState = { bound: false, lastChange: null, noticeTimer: null, historyOp
 function syncSafeKey(value, fallback = 'item') {
   const key = String(value || '').trim().toLowerCase()
     .normalize('NFKC')
-    .replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff_-]+/g, '-')
+    .replace(/[^a-z0-9_-]+/g, '-')
     .replace(/^-+|-+$/g, '');
   return key || fallback;
 }
@@ -16,7 +16,8 @@ function syncEnsureNotationKeys(nextState = state) {
   const used = new Set();
   const assign = (items, prefix) => {
     (items || []).forEach((item, index) => {
-      const base = syncSafeKey(item.notationKey || item.id || `${prefix}-${index + 1}`, `${prefix}-${index + 1}`);
+      const fallback = syncSafeKey(item.id, `${prefix}-${index + 1}`);
+      const base = syncSafeKey(item.notationKey || item.id || fallback, fallback);
       let key = base;
       let suffix = 2;
       while (used.has(key)) key = `${base}-${suffix++}`;
