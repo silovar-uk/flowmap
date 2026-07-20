@@ -110,6 +110,8 @@ function structureResolveTarget(clientX, clientY) {
   const element = document.elementFromPoint(clientX, clientY);
   const card = element?.closest?.('.sticky-note[data-note-id]');
   if (!card || card.dataset.noteId === structureGesture?.noteId) return null;
+  const movingIds = new Set(syncSubtreeBlock(outlineSortedNotes(), structureGesture?.noteId).map((item) => item.id));
+  if (movingIds.has(card.dataset.noteId)) return null;
   const rect = card.getBoundingClientRect();
   const ratio = clamp((clientY - rect.top) / Math.max(1, rect.height), 0, 1);
   const placement = ratio < .3 ? 'before' : ratio > .7 ? 'after' : 'child';
