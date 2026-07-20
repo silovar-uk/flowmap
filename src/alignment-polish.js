@@ -1,4 +1,18 @@
-/* Flowmap v0.18.0 — keep anchor labels separate from shape pseudo-elements */
+/* Flowmap v0.18.0 — keep anchor labels separate and preserve untouched card sizing */
+const alignmentApplyRenderedSizesBeforePolish = alignmentApplyRenderedSizes;
+alignmentApplyRenderedSizes = function alignmentApplyRenderedSizesPolish() {
+  state.notes.forEach((item) => {
+    const card = els['node-layer']?.querySelector(`[data-note-id="${item.id}"]`);
+    if (!card) return;
+    const size = alignmentResolvedSize(item);
+    const custom = Boolean(item.customWidth || item.customHeight);
+    card.style.width = `${size.w}px`;
+    card.style.minHeight = `${size.h}px`;
+    card.style.height = custom ? `${size.h}px` : '';
+    card.classList.toggle('has-custom-size', custom);
+  });
+};
+
 const alignmentUpdateUiBeforePolish = alignmentUpdateUi;
 alignmentUpdateUi = function alignmentUpdateUiPolish() {
   alignmentUpdateUiBeforePolish();
