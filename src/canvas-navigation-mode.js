@@ -1,4 +1,4 @@
-/* Flowmap v0.16.1 — move by default, select with Shift */
+/* Flowmap v0.16.2 — move by default, select with Shift, ignore blank clicks */
 let canvasNavigationEventsBound = false;
 let canvasNavigationShiftHeld = false;
 
@@ -46,7 +46,7 @@ canvasAddUpdateHint = function canvasAddUpdateNavigationHint() {
 
   hint.innerHTML = canvasAddPrimaryHeld && canvasAddModeAvailable()
     ? `<strong>クリックして処理を追加</strong>　・　${free}で自由配置　・　Shift中は範囲選択`
-    : `<strong>ドラッグ</strong>で移動　・　Shift＋ドラッグで範囲選択　・　${primary}＋クリックで処理を追加`;
+    : `<strong>ドラッグ</strong>で移動　・　空白クリックは無操作　・　Shift＋ドラッグで範囲選択　・　${primary}＋クリックで処理を追加`;
 };
 
 const beginPanBeforeCanvasNavigation = beginPan;
@@ -67,9 +67,16 @@ beginPan = function beginPanCanvasNavigation(event) {
   }
 
   if (blankBuildPointer && !canvasAddPrimaryFromEvent(event)) {
-    return typeof beginPanBeforeMultiSelection === 'function'
+    const started = typeof beginPanBeforeMultiSelection === 'function'
       ? beginPanBeforeMultiSelection(event)
       : beginPanBeforeCanvasNavigation(event);
+    if (started && drag?.type === 'pan') {
+      drag.canvasBlankNoop = true;
+      drag.clickSelection = null;
+      drag.clearSelectionOnClick = false;
+      drag.canvasClearOnClick = false;
+    }
+    return started;
   }
 
   return beginPanBeforeCanvasNavigation(event);
@@ -85,6 +92,15 @@ handlePointerUp = function handlePointerUpCanvasNavigation(event) {
     if (typeof suppressClickAfterPan === 'function') suppressClickAfterPan();
     return;
   }
+
+  if (drag?.type === 'pan' && drag.canvasBlankNoop && !drag.moved) {
+    drag = null;
+    els.stage.classList.remove('is-panning');
+    event.preventDefault();
+    if (typeof suppressClickAfterPan === 'function') suppressClickAfterPan();
+    return;
+  }
+
   return handlePointerUpBeforeCanvasNavigation(event);
 };
 
@@ -95,6 +111,9 @@ function canvasNavigationInstallHelp() {
   [...grid.children].forEach((row) => {
     const key = row.querySelector('kbd')?.textContent.trim() || '';
     const description = row.querySelector('span');
+    if (key === '空白クリック' && description) {
+      description.textContent = '何もしない。選択、補足欄、ポップアップを維持';
+    }
     if (key === '範囲ドラッグ' || key === 'Shift＋範囲ドラッグ') {
       row.querySelector('kbd').textContent = 'Shift＋範囲ドラッグ';
       if (description) description.textContent = '範囲内の図形だけに選び直す';
@@ -151,7 +170,7 @@ const updateFlowExperienceUiBeforeCanvasNavigation = updateFlowExperienceUi;
 updateFlowExperienceUi = function updateFlowExperienceUiCanvasNavigation() {
   updateFlowExperienceUiBeforeCanvasNavigation();
   const badge = document.querySelector('.version-badge');
-  if (badge) badge.textContent = 'v0.16.1';
+  if (badge) badge.textContent = 'v0.16.2';
   canvasNavigationApplyMode();
 };
 
