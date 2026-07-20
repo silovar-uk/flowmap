@@ -81,7 +81,17 @@ serializeFlowmark = function serializeFlowmarkPolish(nextState = state) {
 
 flowmarkLoadDraft = async function flowmarkLoadDraftPolish({ force = false } = {}) {
   const boardId = getActiveBoardInfo?.().id || activeBoardId || 'current';
-  if (!force && flowmarkDraftState.boardId === boardId && flowmarkDraftState.parseResult) return flowmarkDraftState;
+  if (!force && flowmarkDraftState.boardId === boardId && flowmarkDraftState.parseResult) {
+    const currentHash = flowmarkHash(flowmarkStructuralProjection());
+    if (!flowmarkDraftState.dirty && flowmarkDraftState.baseHash !== currentHash) {
+      flowmarkDraftState.text = serializeFlowmark();
+      flowmarkDraftState.baseHash = currentHash;
+      flowmarkDraftState.parseResult = parseFlowmark(flowmarkDraftState.text);
+      flowmarkPersistDraft();
+      renderFlowmarkNotation();
+    }
+    return flowmarkDraftState;
+  }
   const saved = await getFlowmapMeta(flowmarkDraftMetaKey()).catch(() => null);
   const hasSavedText = saved && typeof saved.text === 'string';
   const text = hasSavedText ? saved.text : serializeFlowmark();
