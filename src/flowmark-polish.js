@@ -1,4 +1,4 @@
-/* Flowmap v0.19.0 — safer hierarchy inference and in-app guidance */
+/* Flowmap v0.19.0 — safer hierarchy inference, durable drafts and in-app guidance */
 outlineSequencePairs = function outlineSequencePairsFlowmarkPolish(nextState = state) {
   outlineRefreshParents(nextState);
   const notes = outlineSortedNotes(nextState);
@@ -23,6 +23,35 @@ outlineSequencePairs = function outlineSequencePairsFlowmarkPolish(nextState = s
   return pairs;
 };
 
+flowmarkLoadDraft = async function flowmarkLoadDraftPolish({ force = false } = {}) {
+  const boardId = getActiveBoardInfo?.().id || activeBoardId || 'current';
+  if (!force && flowmarkDraftState.boardId === boardId && flowmarkDraftState.parseResult) return flowmarkDraftState;
+  const saved = await getFlowmapMeta(flowmarkDraftMetaKey()).catch(() => null);
+  const hasSavedText = saved && typeof saved.text === 'string';
+  const text = hasSavedText ? saved.text : serializeFlowmark();
+  flowmarkDraftState = {
+    boardId,
+    text,
+    baseHash: saved?.baseHash || flowmarkHash(flowmarkStructuralProjection()),
+    dirty: Boolean(saved?.dirty),
+    parseResult: parseFlowmark(text),
+    saveTimer: null
+  };
+  renderFlowmarkNotation();
+  return flowmarkDraftState;
+};
+
+function restorePresentationSessionIfNeeded() {
+  if (currentFlowMode() !== 'present' || presentationV2.sequence.length || !state.notes.length) return;
+  presentationV2.sequence = presentationBuildSequence();
+  const selectedIndex = selection.type === 'note' ? presentationV2.sequence.indexOf(selection.id) : -1;
+  presentationV2.index = selectedIndex >= 0 ? selectedIndex : 0;
+  presentationV2.showingAll = false;
+  const item = presentationCurrentNote();
+  presentationRenderUi();
+  requestAnimationFrame(() => item ? fitView(item.id) : fitView());
+}
+
 function installWritingHelp() {
   const grid = els['help-dialog']?.querySelector('.shortcut-grid');
   if (!grid || grid.querySelector('[data-shortcut="writing-mode"]')) return;
@@ -36,6 +65,7 @@ const updateFlowExperienceUiBeforeFlowmarkPolish = updateFlowExperienceUi;
 updateFlowExperienceUi = function updateFlowExperienceUiFlowmarkPolish() {
   updateFlowExperienceUiBeforeFlowmarkPolish();
   installWritingHelp();
+  restorePresentationSessionIfNeeded();
   const badge = document.querySelector('.version-badge');
   if (badge) badge.textContent = 'v0.19.0';
 };
