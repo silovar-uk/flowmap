@@ -1,4 +1,4 @@
-/* Flowmap v0.15 — multiple selection */
+/* Flowmap v0.17.1 — multiple selection */
 .stage.is-marquee-selecting { cursor: crosshair; }
 .multi-selection-marquee {
   position: absolute;
@@ -77,6 +77,15 @@
   color: #fff;
 }
 .multi-selection-toolbar .multi-group-button:hover { background: #315fae; }
+.multi-selection-toolbar .multi-delete-button {
+  border-color: #dfaaa2;
+  background: #fff5f3;
+  color: #973f36;
+}
+.multi-selection-toolbar .multi-delete-button:hover {
+  border-color: #c97c72;
+  background: #f8e5e1;
+}
 .multi-selection-toolbar .multi-clear-button:hover { background: #ecefea; }
 
 @media (max-width: 820px) {
