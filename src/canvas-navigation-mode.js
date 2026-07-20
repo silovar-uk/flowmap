@@ -99,13 +99,19 @@ function canvasNavigationInstallHelp() {
       row.querySelector('kbd').textContent = 'Shift＋範囲ドラッグ';
       if (description) description.textContent = '範囲内の図形だけに選び直す';
     }
-    if (key === 'Space＋ドラッグ') {
-      row.querySelector('kbd').textContent = '空白ドラッグ';
-      if (description) description.textContent = 'ボードを移動。Space＋ドラッグと中ボタンも利用可能';
+    if (key === '空白ドラッグ' && description) {
+      description.textContent = 'ボードを移動';
+    }
+    if (key === 'Space＋ドラッグ' && description) {
+      description.textContent = 'ボードを移動。中ボタンドラッグも利用可能';
     }
   });
 
-  if (!grid.querySelector('[data-shortcut="marquee-add"]')) {
+  const hasAdditiveHelp = [...grid.querySelectorAll('kbd')].some((item) => {
+    const key = item.textContent;
+    return key.includes('Shift') && key.includes('範囲ドラッグ') && (key.includes('Ctrl') || key.includes('Cmd'));
+  });
+  if (!hasAdditiveHelp) {
     const row = document.createElement('div');
     row.dataset.shortcut = 'marquee-add';
     row.innerHTML = `<kbd>${CANVAS_ADD_IS_MAC ? 'Cmd' : 'Ctrl'}＋Shift＋範囲ドラッグ</kbd><span>現在の複数選択へ範囲内の図形を追加</span>`;
