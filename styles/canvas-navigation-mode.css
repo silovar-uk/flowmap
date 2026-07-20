@@ -1,0 +1,19 @@
+/* Flowmap v0.16.1 — canvas navigation and selection cues */
+.board.is-canvas-select-mode .stage { cursor: crosshair; }
+.board.is-canvas-select-mode .sticky-note { cursor: cell; }
+.board.is-canvas-select-mode .group-header,
+.board.is-canvas-select-mode .phase-title { cursor: crosshair; }
+.board.is-canvas-select-mode button,
+.board.is-canvas-select-mode select { cursor: pointer; }
+.board.is-canvas-select-mode input,
+.board.is-canvas-select-mode textarea,
+.board.is-canvas-select-mode [contenteditable="true"] { cursor: text; }
+.board.is-canvas-select-mode .canvas-add-preview,
+.board.is-canvas-select-mode .canvas-add-guide,
+.board.is-canvas-select-mode .canvas-add-origin { display: none !important; }
+
+.board.is-canvas-select-mode .canvas-hint {
+  border-color: rgba(82, 117, 176, .38);
+  background: rgba(241, 246, 255, .94);
+  color: #3d5e91;
+}
