@@ -23,6 +23,62 @@ outlineSequencePairs = function outlineSequencePairsFlowmarkPolish(nextState = s
   return pairs;
 };
 
+serializeFlowmark = function serializeFlowmarkPolish(nextState = state) {
+  const lines = [];
+  const noteKeyMap = new Map(nextState.notes.map((item) => [item.id, flowmarkEntityKey(item, 'note')]));
+  const orderedNotes = outlineSortedNotes(nextState);
+  const writtenNotes = new Set();
+
+  const writeNode = (item) => {
+    if (writtenNotes.has(item.id)) return;
+    writtenNotes.add(item.id);
+    const indent = '  '.repeat(clamp(Number(item.depth) || 0, 0, OUTLINE_MAX_DEPTH));
+    lines.push(`${indent}- [${FLOWMARK_TYPES.has(item.type) ? item.type : 'process'}] ${item.title || '無題の処理'} @${noteKeyMap.get(item.id)}`);
+    const metadata = {
+      status: item.status && item.status !== 'todo' ? item.status : '',
+      due: item.due,
+      assignee: item.assignee,
+      tags: Array.isArray(item.tags) ? item.tags.join(', ') : item.tags,
+      summary: item.summary,
+      location: item.location,
+      link: item.link,
+      note: item.note
+    };
+    Object.entries({ ...metadata, ...(item.flowmarkMeta || {}) }).forEach(([key, value]) => {
+      if (value === undefined || value === null || String(value).trim() === '') return;
+      lines.push(`${indent}  :: ${key} = ${flowmarkEscapeValue(value)}`);
+    });
+    nextState.edges
+      .filter((edgeItem) => edgeItem.from === item.id && (edgeItem.source !== 'auto' || edgeItem.kind !== 'sequence' || edgeItem.label))
+      .forEach((edgeItem) => {
+        const targetKey = noteKeyMap.get(edgeItem.to);
+        if (!targetKey) return;
+        const operator = edgeItem.kind === 'merge' ? '=>' : edgeItem.kind === 'reference' ? '~>' : '->';
+        const label = edgeItem.label ? ` [${edgeItem.label}]` : '';
+        lines.push(`${indent}  ${operator}${label} @${targetKey}`);
+      });
+  };
+
+  flowmarkOrderedPhases().forEach((phase) => {
+    lines.push(`# ${phase.title || '無題のフェーズ'} @${flowmarkEntityKey(phase, 'phase')}`, '');
+    orderedNotes.filter((item) => item.phaseId === phase.id && !item.groupId).forEach(writeNode);
+    if (orderedNotes.some((item) => item.phaseId === phase.id && !item.groupId)) lines.push('');
+    flowmarkOrderedGroups(phase.id).forEach((group) => {
+      lines.push(`## ${group.title || '無題の囲み'} @${flowmarkEntityKey(group, 'group')}`, '');
+      orderedNotes.filter((item) => item.phaseId === phase.id && item.groupId === group.id).forEach(writeNode);
+      lines.push('');
+    });
+    lines.push('');
+  });
+
+  const unassigned = orderedNotes.filter((item) => !nextState.phases.some((phase) => phase.id === item.phaseId));
+  if (unassigned.length) {
+    lines.push('# 未分類 @phase-unassigned', '');
+    unassigned.forEach(writeNode);
+  }
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+};
+
 flowmarkLoadDraft = async function flowmarkLoadDraftPolish({ force = false } = {}) {
   const boardId = getActiveBoardInfo?.().id || activeBoardId || 'current';
   if (!force && flowmarkDraftState.boardId === boardId && flowmarkDraftState.parseResult) return flowmarkDraftState;
