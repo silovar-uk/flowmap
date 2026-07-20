@@ -223,3 +223,79 @@ renderEdgeInspector = function renderEdgeInspectorOutlineWorkflow(item) {
   if (source) source.textContent = item.source === 'auto' ? 'アウトライン' : '手動';
   if (autoButton) autoButton.hidden = item.source === 'auto' || !outlineIsCurrentSequencePair(item.from, item.to);
 };
+
+const finishConnectionBeforeOutlineWorkflow = finishConnection;
+finishConnection = function finishConnectionOutlineWorkflow(event) {
+  const current = connect;
+  if (current?.reconnectEdgeId) {
+    const item = getEdge(current.reconnectEdgeId);
+    const targetEl = document.elementFromPoint(event.clientX, event.clientY)?.closest('.sticky-note');
+    const targetId = targetEl?.dataset.noteId;
+    const otherId = current.end === 'from' ? item?.to : item?.from;
+    if (item?.source === 'auto' && targetId && targetId !== otherId) {
+      const oldFrom = item.from;
+      const oldTo = item.to;
+      connect = null;
+      els['connection-preview'].hidden = true;
+      mutate(current.end === 'from' ? '矢印の接続元を変更' : '矢印の接続先を変更', () => {
+        outlineSuppressPair(oldFrom, oldTo);
+        item[current.end] = targetId;
+        item.source = 'manual';
+        item.kind = OUTLINE_EDGE_KINDS.includes(item.kind) ? item.kind : 'sequence';
+        outlineUnsuppressPair(item.from, item.to);
+        outlineSyncAutoEdges();
+      });
+      return;
+    }
+  }
+  return finishConnectionBeforeOutlineWorkflow(event);
+};
+
+let outlineEdgeOverrideEventsBound = false;
+function outlineBindEdgeOverrideEvents() {
+  if (outlineEdgeOverrideEventsBound) return;
+  outlineEdgeOverrideEventsBound = true;
+
+  const interceptAutoEndpoint = (event, key, label) => {
+    const item = selection.type === 'edge' ? getEdge(selection.id) : null;
+    if (!item || item.source !== 'auto') return;
+    const nextId = event.currentTarget.value;
+    const otherId = key === 'from' ? item.to : item.from;
+    if (!nextId || nextId === otherId || nextId === item[key]) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const oldFrom = item.from;
+    const oldTo = item.to;
+    mutate(label, () => {
+      outlineSuppressPair(oldFrom, oldTo);
+      item[key] = nextId;
+      item.source = 'manual';
+      outlineUnsuppressPair(item.from, item.to);
+      outlineSyncAutoEdges();
+    });
+  };
+
+  els['edge-from']?.addEventListener('change', (event) => interceptAutoEndpoint(event, 'from', '接続元を変更'), true);
+  els['edge-to']?.addEventListener('change', (event) => interceptAutoEndpoint(event, 'to', '接続先を変更'), true);
+  els['reverse-edge']?.addEventListener('click', (event) => {
+    const item = selection.type === 'edge' ? getEdge(selection.id) : null;
+    if (!item || item.source !== 'auto') return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const oldFrom = item.from;
+    const oldTo = item.to;
+    mutate('矢印を反転', () => {
+      outlineSuppressPair(oldFrom, oldTo);
+      [item.from, item.to] = [item.to, item.from];
+      item.source = 'manual';
+      outlineUnsuppressPair(item.from, item.to);
+      outlineSyncAutoEdges();
+    });
+  }, true);
+}
+
+const bindEventsBeforeEdgeClarity = bindEvents;
+bindEvents = function bindEventsEdgeClarity() {
+  bindEventsBeforeEdgeClarity();
+  outlineBindEdgeOverrideEvents();
+};
