@@ -1,4 +1,4 @@
-/* Flowmap v0.25 bootstrap — runs after every override is loaded */
+/* Flowmap v0.26 bootstrap — runs after every override is loaded */
 let tutorialAdvanceTimer = null;
 
 prepareTutorialStep = function prepareTutorialStepV12(step) {
@@ -88,11 +88,13 @@ async function loadFlowmapEnhancementAssets() {
   await Promise.all([
     loadFlowmapStyle('./styles/p0-experience-fixes.css?v=0.23.0', 'p0-style'),
     loadFlowmapStyle('./styles/pdf-preview.css?v=0.24.0', 'pdf-preview-style'),
-    loadFlowmapStyle('./styles/pdf-readability-v025.css?v=0.25.0', 'pdf-readability-v025-style')
+    loadFlowmapStyle('./styles/pdf-readability-v025.css?v=0.25.0', 'pdf-readability-v025-style'),
+    loadFlowmapStyle('./styles/pdf-pages-v026.css?v=0.26.0', 'pdf-pages-v026-style')
   ]);
   await loadFlowmapScript('./src/p0-experience-fixes.js?v=0.23.0', 'p0-script');
   await loadFlowmapScript('./src/pdf-preview.js?v=0.24.0', 'pdf-preview-script');
   await loadFlowmapScript('./src/pdf-readability-v025.js?v=0.25.0', 'pdf-readability-v025-script');
+  await loadFlowmapScript('./src/pdf-pages-v026.js?v=0.26.0', 'pdf-pages-v026-script');
 }
 
 async function bootFlowmap() {
