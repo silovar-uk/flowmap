@@ -1,0 +1,96 @@
+/* Flowmap v0.23.0 — presentation and file I/O polish */
+.presentation-launch-button {
+  min-height: 36px;
+  gap: 6px;
+  border-color: #aebbd0;
+  background: #f4f7fc;
+  color: #315d9f;
+  font-size: 10px;
+  font-weight: 850;
+}
+.presentation-launch-button:hover { border-color: #8fa8d1; background: #eaf1fc; }
+.presentation-launch-button.is-active { border-color: #315fae; background: #3f6fbd; color: #fff; }
+
+body[data-flow-mode="present"] #presentation-launch-button { display: inline-flex !important; }
+body[data-flow-mode="present"] .flow-mode-switch { opacity: .72; }
+body[data-flow-mode="present"] .phase-card,
+body[data-flow-mode="present"] .group-card { transition: opacity .24s ease, filter .24s ease; }
+body[data-flow-mode="present"] .board:not(.is-presentation-overview) .phase-card,
+body[data-flow-mode="present"] .board:not(.is-presentation-overview) .group-card { opacity: .48; filter: saturate(.7); }
+body[data-flow-mode="present"] .sticky-note.is-presentation-current {
+  opacity: 1;
+  transform: scale(1.045);
+  box-shadow: 0 0 0 5px rgba(58, 104, 181, .20), 0 20px 48px rgba(37, 67, 115, .22) !important;
+}
+body[data-flow-mode="present"] .sticky-note.is-presentation-near { opacity: .72; filter: saturate(.86); }
+body[data-flow-mode="present"] .sticky-note.is-presentation-muted { opacity: .42; filter: grayscale(.18) saturate(.62); }
+body[data-flow-mode="present"] [data-edge-group].is-presentation-near .edge { stroke: #426fb6; stroke-width: 2.7px; opacity: 1; }
+body[data-flow-mode="present"] [data-edge-group].is-presentation-muted { opacity: .26; }
+body[data-flow-mode="present"] .board.is-presentation-overview .sticky-note,
+body[data-flow-mode="present"] .board.is-presentation-overview [data-edge-group],
+body[data-flow-mode="present"] .board.is-presentation-overview .phase-card,
+body[data-flow-mode="present"] .board.is-presentation-overview .group-card { opacity: 1; filter: none; }
+
+.presentation-actions button[hidden] { display: none !important; }
+.presentation-actions .presentation-start { min-width: 112px; }
+.presentation-controller { width: min(980px, calc(100% - 36px)); }
+
+#data-dialog form { width: min(820px, calc(100vw - 32px)); }
+#data-dialog .dialog-grid {
+  display: grid;
+  gap: 14px;
+  max-height: min(72vh, 760px);
+  overflow: auto;
+  padding: 2px 2px 8px;
+}
+.io-section {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #d8dfd9;
+  border-radius: 13px;
+  background: #fafbf8;
+}
+.io-section > header { display: grid; gap: 2px; }
+.io-section > header strong { color: #2c3d33; font-size: 13px; }
+.io-section > header span { color: #718078; font-size: 10px; }
+.io-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.io-import-section .io-card-grid { grid-template-columns: 1fr; }
+.io-other-section { background: #fffaf7; }
+.io-other-section .io-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.io-section .dialog-danger-card { border-color: #dfb8b1; background: #fff4f2; }
+.import-mode-choice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.import-mode-choice legend { margin-bottom: 7px; color: #5d6c63; font-size: 10px; font-weight: 800; }
+.import-mode-choice label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid #d3dbd5;
+  border-radius: 9px;
+  background: #fff;
+  cursor: pointer;
+}
+.import-mode-choice label:has(input:checked) { border-color: #7898ca; background: #eef4ff; box-shadow: 0 0 0 2px rgba(72, 112, 177, .10); }
+.import-mode-choice input { margin-top: 3px; }
+.import-mode-choice span { display: grid; gap: 2px; }
+.import-mode-choice strong { color: #34473b; font-size: 11px; }
+.import-mode-choice small { color: #718078; font-size: 9px; line-height: 1.45; }
+.io-import-card { min-height: 74px; }
+
+@media (max-width: 900px) {
+  .flow-mode-switch button { padding-inline: 7px; }
+  .presentation-launch-button > span:last-child { display: none; }
+  .presentation-launch-button { width: 36px; justify-content: center; padding: 0; }
+  .io-card-grid,
+  .io-other-section .io-card-grid,
+  .import-mode-choice { grid-template-columns: 1fr; }
+  .presentation-controller { width: calc(100% - 20px); }
+}
