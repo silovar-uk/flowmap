@@ -135,3 +135,37 @@ updateFlowExperienceUi = function updateFlowExperienceUiContainerInspector() {
   const badge = document.querySelector('.version-badge');
   if (badge) badge.textContent = `v${FLOWMAP_CONTAINER_VERSION}`;
 };
+
+/* Keep a collapsed group's remembered expanded position aligned with its phase. */
+const containerBeginPhaseMoveBeforeContainerInspectorPolish = containerBeginPhaseMove;
+containerBeginPhaseMove = function containerBeginPhaseMoveInspectorPolish(event, header) {
+  const result = containerBeginPhaseMoveBeforeContainerInspectorPolish(event, header);
+  if (containerGesture?.kind === 'phase-move') {
+    containerGesture.groupOrigins.forEach((origin) => {
+      const item = getGroup(origin.id);
+      origin.expandedBounds = item?.expandedBounds ? clone(item.expandedBounds) : null;
+    });
+  }
+  return result;
+};
+
+const containerUpdateGestureBeforeContainerInspectorPolish = containerUpdateGesture;
+containerUpdateGesture = function containerUpdateGestureInspectorPolish(event) {
+  const active = containerGesture?.kind === 'phase-move' ? containerGesture : null;
+  const result = containerUpdateGestureBeforeContainerInspectorPolish(event);
+  if (active?.moved) {
+    active.groupOrigins.forEach((origin) => {
+      if (!origin.expandedBounds) return;
+      const item = getGroup(origin.id);
+      if (!item) return;
+      const dx = item.x - origin.x;
+      const dy = item.y - origin.y;
+      item.expandedBounds = {
+        ...origin.expandedBounds,
+        x: origin.expandedBounds.x + dx,
+        y: origin.expandedBounds.y + dy
+      };
+    });
+  }
+  return result;
+};
