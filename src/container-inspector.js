@@ -113,6 +113,13 @@ function containerBindInspector() {
     const id = selection.type === type ? selection.id : '';
     if (id) containerCommitNumericField(type, id, input.dataset.containerField, input.value);
   });
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('.container-inspector-geometry [data-container-action]');
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    containerHandleAction(button);
+  });
 }
 
 const bindEventsBeforeContainerInspector = bindEvents;
