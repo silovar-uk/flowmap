@@ -19,7 +19,7 @@ function containerGuidePosition(popover, anchor) {
   const width = Math.min(350, window.innerWidth - 20);
   popover.style.width = `${width}px`;
   const measured = popover.getBoundingClientRect();
-  let left = clamp(rect.left, 10, Math.max(10, window.innerWidth - width - 10));
+  const left = clamp(rect.left, 10, Math.max(10, window.innerWidth - width - 10));
   let top = rect.top - measured.height - 10;
   if (top < 10) top = Math.min(window.innerHeight - measured.height - 10, rect.top + 48);
   Object.assign(popover.style, { left: `${left}px`, top: `${Math.max(10, top)}px` });
@@ -90,6 +90,20 @@ select = function selectContainerGuidance(type, id, options = {}) {
   return result;
 };
 
+function containerPlaceCreatedPhaseInView(phase) {
+  if (!phase || !els.stage) return;
+  const rect = els.stage.getBoundingClientRect();
+  const scale = state.viewport.scale || 1;
+  const centerX = (rect.width / 2 - state.viewport.x) / scale;
+  const centerY = (rect.height / 2 - state.viewport.y) / scale;
+  phase.w = Math.min(700, WORLD.width);
+  phase.h = Math.min(720, WORLD.height);
+  phase.x = clamp(centerX - phase.w / 2, 0, WORLD.width - phase.w);
+  phase.y = clamp(centerY - phase.h / 2, 0, WORLD.height - phase.h);
+  saveState();
+  renderAll();
+}
+
 function containerInstallCreationGuides() {
   [els['add-phase'], els['nav-add-phase']].filter(Boolean).forEach((button) => {
     if (button.dataset.containerGuideBound === 'true') return;
@@ -97,8 +111,10 @@ function containerInstallCreationGuides() {
     button.addEventListener('click', () => {
       requestAnimationFrame(() => {
         if (selection.type !== 'phase' || !getPhase(selection.id)) return;
-        containerFocusView('phase', selection.id);
-        requestAnimationFrame(() => containerShowGuide('phase', selection.id, { created: true, detailed: true }));
+        const phase = getPhase(selection.id);
+        containerPlaceCreatedPhaseInView(phase);
+        containerFocusView('phase', phase.id);
+        requestAnimationFrame(() => containerShowGuide('phase', phase.id, { created: true, detailed: true }));
       });
     });
   });
