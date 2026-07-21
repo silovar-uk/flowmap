@@ -1,4 +1,4 @@
-/* Flowmap v0.23 bootstrap — runs after every override is loaded */
+/* Flowmap v0.24 bootstrap — runs after every override is loaded */
 let tutorialAdvanceTimer = null;
 
 prepareTutorialStep = function prepareTutorialStepV12(step) {
@@ -59,34 +59,45 @@ document.addEventListener('keydown', (event) => {
   document.getElementById('current-board-button')?.focus();
 }, true);
 
-function loadFlowmapP0Assets() {
-  const stylesheet = new Promise((resolve) => {
-    if (document.querySelector('link[data-flowmap-p0]')) return resolve();
+function loadFlowmapStyle(href, key) {
+  return new Promise((resolve) => {
+    if (document.querySelector(`link[data-flowmap-asset="${key}"]`)) return resolve();
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = './styles/p0-experience-fixes.css?v=0.23.0';
-    link.dataset.flowmapP0 = 'true';
+    link.href = href;
+    link.dataset.flowmapAsset = key;
     link.addEventListener('load', resolve, { once: true });
     link.addEventListener('error', resolve, { once: true });
     document.head.append(link);
   });
-  const script = new Promise((resolve, reject) => {
-    if (document.querySelector('script[data-flowmap-p0]')) return resolve();
+}
+
+function loadFlowmapScript(src, key) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[data-flowmap-asset="${key}"]`)) return resolve();
     const element = document.createElement('script');
-    element.src = './src/p0-experience-fixes.js?v=0.23.0';
-    element.dataset.flowmapP0 = 'true';
+    element.src = src;
+    element.dataset.flowmapAsset = key;
     element.addEventListener('load', resolve, { once: true });
-    element.addEventListener('error', () => reject(new Error('P0 experience fixes could not be loaded')), { once: true });
+    element.addEventListener('error', () => reject(new Error(`${key} could not be loaded`)), { once: true });
     document.head.append(element);
   });
-  return Promise.all([stylesheet, script]);
+}
+
+async function loadFlowmapEnhancementAssets() {
+  await Promise.all([
+    loadFlowmapStyle('./styles/p0-experience-fixes.css?v=0.23.0', 'p0-style'),
+    loadFlowmapStyle('./styles/pdf-preview.css?v=0.24.0', 'pdf-preview-style')
+  ]);
+  await loadFlowmapScript('./src/p0-experience-fixes.js?v=0.23.0', 'p0-script');
+  await loadFlowmapScript('./src/pdf-preview.js?v=0.24.0', 'pdf-preview-script');
 }
 
 async function bootFlowmap() {
   try {
-    await loadFlowmapP0Assets();
+    await loadFlowmapEnhancementAssets();
   } catch (error) {
-    console.error('[Flowmap] Failed to load experience fixes', error);
+    console.error('[Flowmap] Failed to load enhancement assets', error);
   }
   await init();
 }
