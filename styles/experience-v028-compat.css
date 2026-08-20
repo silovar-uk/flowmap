@@ -1,0 +1,21 @@
+/* Flowmap v0.28 — final compatibility rules for older P0/mobile chrome */
+body[data-flow-mode="present"] .phase-card,
+body[data-flow-mode="present"] .group-card {
+  opacity: 1;
+  filter: none;
+}
+
+@media (max-width: 820px) {
+  #data-button {
+    display: inline-flex !important;
+    min-width: 36px;
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+  #data-button::before {
+    content: '⇩';
+    font-size: 16px;
+  }
+}
