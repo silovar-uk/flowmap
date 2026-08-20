@@ -140,10 +140,11 @@ function presentationSelect(index, { fit = true } = {}) {
   }
 }
 
-function presentationEnter() {
+function presentationEnter(previousMode = 'build') {
   installPresentationV2();
   presentationStop();
   presentationV2.before = {
+    mode: previousMode,
     viewport: clone(state.viewport),
     selection: clone(selection),
     selectedNoteIds: typeof selectedNoteIds !== 'undefined' ? [...selectedNoteIds] : null
@@ -176,6 +177,11 @@ function presentationLeave() {
   document.getElementById('presentation-controller')?.setAttribute('hidden', '');
 }
 
+function presentationExit() {
+  const target = presentationV2.before?.mode;
+  setFlowMode(target && target !== 'present' ? target : 'build');
+}
+
 function presentationTogglePlay() {
   if (!presentationV2.sequence.length) return;
   presentationV2.playing = !presentationV2.playing;
@@ -204,14 +210,14 @@ function bindPresentationV2() {
     if (event.target.closest('[data-presentation-next]')) return presentationSelect(presentationV2.index + 1);
     if (event.target.closest('[data-presentation-play]')) return presentationTogglePlay();
     if (event.target.closest('[data-presentation-all]')) return presentationShowAll();
-    if (event.target.closest('[data-presentation-exit]')) return setFlowMode('build');
+    if (event.target.closest('[data-presentation-exit]')) return presentationExit();
   });
   document.addEventListener('keydown', (event) => {
     if (currentFlowMode() !== 'present' || event.target.matches('input,textarea,select,[contenteditable="true"]')) return;
     if (event.key === 'ArrowLeft') { event.preventDefault(); presentationSelect(presentationV2.index - 1); }
     if (event.key === 'ArrowRight') { event.preventDefault(); presentationSelect(presentationV2.index + 1); }
     if (event.key === ' ') { event.preventDefault(); presentationTogglePlay(); }
-    if (event.key === 'Escape') { event.preventDefault(); setFlowMode('build'); }
+    if (event.key === 'Escape') { event.preventDefault(); presentationExit(); }
   }, true);
 }
 
