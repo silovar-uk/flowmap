@@ -99,6 +99,7 @@ async function loadFlowmapEnhancementAssets() {
   await loadFlowmapScript('./src/pdf-pages-v026.js?v=0.26.0', 'pdf-pages-v026-script');
   await loadFlowmapScript('./src/guided-sample-tutorial-v027.js?v=0.27.0', 'guided-sample-tutorial-v027-script');
   await loadFlowmapScript('./src/experience-v028.js?v=0.28.0', 'experience-v028-script');
+  await loadFlowmapScript('./src/presentation-lifecycle-v028.js?v=0.28.0', 'presentation-lifecycle-v028-script');
 }
 
 async function bootFlowmap() {
@@ -109,7 +110,15 @@ async function bootFlowmap() {
   }
   if (typeof prepareFlowmapStartup === 'function') await prepareFlowmapStartup();
   await init();
-  if (typeof installFlowmapExperienceV28 === 'function') installFlowmapExperienceV28();
+  if (typeof installCleanViewV28 === 'function') installCleanViewV28();
+  if (typeof installDataWorkspaceV28 === 'function') installDataWorkspaceV28();
+  if (typeof installPresentationLifecycleV28 === 'function') installPresentationLifecycleV28();
+  const badge = document.querySelector('.version-badge');
+  if (badge) badge.textContent = 'v0.28.0';
+  if (els['data-button']) {
+    els['data-button'].textContent = '書き出し';
+    els['data-button'].title = 'PNG・PDF・JSON・YAMLの書き出しと読み込み';
+  }
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { void bootFlowmap(); }, { once: true });
