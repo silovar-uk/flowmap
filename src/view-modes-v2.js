@@ -1,4 +1,4 @@
-/* Flowmap v0.19.0 — four-purpose workspace modes and readable canvas utilities */
+/* Flowmap v0.28 — four-purpose workspace modes with transient presentation state */
 const FLOWMAP_VIEW_MODES_V2 = new Set(['outline', 'build', 'check', 'present']);
 const flowmapModeHooks = new Map();
 
@@ -13,7 +13,8 @@ normalizeFlowchartState = function normalizeViewModesV2(next) {
   const normalized = normalizeBeforeViewModesV2(next);
   if (!normalized) return normalized;
   normalized.settings ||= {};
-  normalized.settings.viewMode = FLOWMAP_VIEW_MODES_V2.has(requestedMode) ? requestedMode : (FLOWMAP_VIEW_MODES_V2.has(normalized.settings.viewMode) ? normalized.settings.viewMode : 'build');
+  const restoredMode = requestedMode === 'present' ? 'build' : requestedMode;
+  normalized.settings.viewMode = FLOWMAP_VIEW_MODES_V2.has(restoredMode) ? restoredMode : (FLOWMAP_VIEW_MODES_V2.has(normalized.settings.viewMode) && normalized.settings.viewMode !== 'present' ? normalized.settings.viewMode : 'build');
   normalized.settings.writeTab = normalized.settings.writeTab === 'notation' ? 'notation' : 'tree';
   return normalized;
 };
@@ -62,7 +63,7 @@ setFlowMode = function setFlowModeV2(mode) {
     state.settings.inspectorOpen = state.settings.beforePresentInspectorOpen !== false;
   }
   state.settings.viewMode = mode;
-  saveState();
+  if (mode !== 'present') saveState();
   renderAll();
   flowmapModeHooks.get(mode)?.enter?.(previous);
   toast(`${flowmapModeLabel(mode)}モードへ切り替えました`);
@@ -96,7 +97,7 @@ updateFlowExperienceUi = function updateFlowExperienceUiV2() {
   });
   installCanvasUtilityLabels();
   const badge = document.querySelector('.version-badge');
-  if (badge) badge.textContent = 'v0.19.0';
+  if (badge) badge.textContent = 'v0.28.0';
 };
 
 const bindFlowExperienceEventsBeforeViewModesV2 = bindFlowExperienceEvents;
