@@ -1,0 +1,47 @@
+/* Flowmap v0.28.2 — keep the normal layout model in reading view */
+body[data-clean-view="true"] {
+  --topbar-h: 0px;
+  --nav-w: 0px;
+  --inspector-w: 0px;
+}
+
+/* Override the legacy one-row clean layout with the normal two-row shell.
+   The first row simply collapses to zero while the board keeps its usual grid context. */
+body[data-clean-view="true"] .app-shell {
+  grid-template-rows: 0 minmax(0, 1fr);
+}
+
+/* Keep workspace as the same three-column grid used by edit mode.
+   The side columns resolve to zero through the variables above. */
+body[data-clean-view="true"] .workspace,
+body[data-clean-view="true"][data-flow-mode="outline"] .workspace {
+  display: grid !important;
+  grid-template-columns: var(--nav-w) minmax(0, 1fr) var(--inspector-w) !important;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Preserve board/stage geometry instead of creating a separate reading-view layout. */
+body[data-clean-view="true"] #board,
+body[data-clean-view="true"][data-flow-mode="outline"] #board {
+  display: block !important;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  width: auto;
+  height: auto;
+}
+
+body[data-clean-view="true"] #stage {
+  inset: 0;
+}
+
+@media (max-width: 820px) {
+  body[data-clean-view="true"] .app-shell {
+    grid-template-rows: 0 minmax(0, 1fr);
+  }
+
+  body[data-clean-view="true"] .workspace {
+    grid-template-columns: 0 minmax(0, 1fr) 0 !important;
+  }
+}
