@@ -1,6 +1,13 @@
-/* Flowmap v0.19.0 — presentation mode with an immediate starting point and narration controls */
+/* Flowmap v0.28 — presentation mode without render/bind monkey patches */
 let presentationV2Bound = false;
-let presentationV2 = { sequence: [], index: 0, playing: false, timer: null, showingAll: false };
+let presentationV2 = {
+  sequence: [],
+  index: 0,
+  playing: false,
+  timer: null,
+  showingAll: false,
+  before: null
+};
 
 function presentationBuildSequence() {
   const ordered = outlineSortedNotes();
@@ -23,7 +30,7 @@ function presentationBuildSequence() {
 }
 
 function installPresentationV2() {
-  if (document.getElementById('presentation-controller')) return;
+  if (document.getElementById('presentation-controller') || !els.board) return;
   const controller = document.createElement('section');
   controller.id = 'presentation-controller';
   controller.className = 'presentation-controller';
@@ -32,7 +39,7 @@ function installPresentationV2() {
     <div class="presentation-copy">
       <span id="presentation-counter">0 / 0</span>
       <strong id="presentation-title">工程がありません</strong>
-      <p id="presentation-summary">「書く」または「作る」で工程を追加してください。</p>
+      <p id="presentation-summary">工程を追加すると、順番に説明できます。</p>
     </div>
     <div class="presentation-actions">
       <button type="button" data-presentation-prev>← 戻る</button>
@@ -66,23 +73,10 @@ function presentationScheduleNext() {
     }
     presentationSelect(presentationV2.index + 1);
     presentationScheduleNext();
-  }, 1900);
+  }, 2200);
 }
 
-function presentationSelect(index, { fit = true } = {}) {
-  if (!presentationV2.sequence.length) return;
-  presentationV2.index = clamp(index, 0, presentationV2.sequence.length - 1);
-  presentationV2.showingAll = false;
-  const item = presentationCurrentNote();
-  if (item) {
-    selection = { type: 'note', id: item.id };
-    if (typeof selectedNoteIds !== 'undefined') selectedNoteIds = new Set([item.id]);
-  }
-  renderAll();
-  if (fit && item) requestAnimationFrame(() => fitView(item.id));
-}
-
-function presentationRenderNodeState() {
+function presentationApplyVisualState() {
   if (currentFlowMode() !== 'present') return;
   const current = presentationCurrentNote();
   const previousId = presentationV2.sequence[presentationV2.index - 1];
@@ -90,7 +84,7 @@ function presentationRenderNodeState() {
   $$('.sticky-note', els['node-layer']).forEach((card) => {
     const id = card.dataset.noteId;
     card.classList.toggle('is-presentation-current', id === current?.id && !presentationV2.showingAll);
-    card.classList.toggle('is-presentation-near', id === previousId || id === nextId);
+    card.classList.toggle('is-presentation-near', !presentationV2.showingAll && (id === previousId || id === nextId));
     card.classList.toggle('is-presentation-muted', !presentationV2.showingAll && id !== current?.id && id !== previousId && id !== nextId);
   });
   state.edges.forEach((edgeItem) => {
@@ -113,7 +107,7 @@ function presentationRenderUi() {
   document.getElementById('presentation-counter').textContent = presentationV2.sequence.length ? `${presentationV2.index + 1} / ${presentationV2.sequence.length}` : '0 / 0';
   document.getElementById('presentation-title').textContent = item?.title || '工程がありません';
   const detail = item?.summary || item?.note || [item?.assignee, item?.due].filter(Boolean).join('・') || '次の工程とのつながりを確認します。';
-  document.getElementById('presentation-summary').textContent = item ? detail : '「書く」または「作る」で工程を追加してください。';
+  document.getElementById('presentation-summary').textContent = item ? detail : '工程を追加すると、順番に説明できます。';
   const previous = document.querySelector('[data-presentation-prev]');
   const next = document.querySelector('[data-presentation-next]');
   const play = document.querySelector('[data-presentation-play]');
@@ -124,26 +118,61 @@ function presentationRenderUi() {
     play.textContent = presentationV2.playing ? '■ 停止' : '▶ 再生';
   }
   document.querySelector('[data-presentation-all]')?.classList.toggle('is-active', presentationV2.showingAll);
-  presentationRenderNodeState();
+  presentationApplyVisualState();
+}
+
+function presentationSelect(index, { fit = true } = {}) {
+  if (!presentationV2.sequence.length) return;
+  presentationV2.index = clamp(index, 0, presentationV2.sequence.length - 1);
+  presentationV2.showingAll = false;
+  const item = presentationCurrentNote();
+  if (item) {
+    selection = { type: 'note', id: item.id };
+    if (typeof selectedNoteIds !== 'undefined') selectedNoteIds = new Set([item.id]);
+  }
+  renderAll();
+  presentationRenderUi();
+  if (fit && item) {
+    requestAnimationFrame(() => {
+      fitView(item.id);
+      presentationApplyVisualState();
+    });
+  }
 }
 
 function presentationEnter() {
   installPresentationV2();
   presentationStop();
+  presentationV2.before = {
+    viewport: clone(state.viewport),
+    selection: clone(selection),
+    selectedNoteIds: typeof selectedNoteIds !== 'undefined' ? [...selectedNoteIds] : null
+  };
   presentationV2.sequence = presentationBuildSequence();
   const selectedIndex = selection.type === 'note' ? presentationV2.sequence.indexOf(selection.id) : -1;
   presentationV2.index = selectedIndex >= 0 ? selectedIndex : 0;
   presentationV2.showingAll = false;
-  renderAll();
   const item = presentationCurrentNote();
-  requestAnimationFrame(() => item ? fitView(item.id) : fitView());
+  presentationRenderUi();
+  requestAnimationFrame(() => {
+    if (item) fitView(item.id);
+    else fitView();
+    presentationRenderUi();
+  });
 }
 
 function presentationLeave() {
   presentationStop();
+  const before = presentationV2.before;
+  if (before) {
+    state.viewport = clone(before.viewport);
+    selection = clone(before.selection);
+    if (typeof selectedNoteIds !== 'undefined' && Array.isArray(before.selectedNoteIds)) selectedNoteIds = new Set(before.selectedNoteIds);
+  }
   presentationV2.sequence = [];
   presentationV2.index = 0;
   presentationV2.showingAll = false;
+  presentationV2.before = null;
   document.getElementById('presentation-controller')?.setAttribute('hidden', '');
 }
 
@@ -159,14 +188,18 @@ function presentationShowAll() {
   presentationStop();
   presentationV2.showingAll = true;
   renderAll();
-  requestAnimationFrame(() => fitView());
+  presentationRenderUi();
+  requestAnimationFrame(() => {
+    fitView();
+    presentationApplyVisualState();
+  });
 }
 
 function bindPresentationV2() {
   if (presentationV2Bound) return;
   presentationV2Bound = true;
   installPresentationV2();
-  document.getElementById('presentation-controller').addEventListener('click', (event) => {
+  document.getElementById('presentation-controller')?.addEventListener('click', (event) => {
     if (event.target.closest('[data-presentation-prev]')) return presentationSelect(presentationV2.index - 1);
     if (event.target.closest('[data-presentation-next]')) return presentationSelect(presentationV2.index + 1);
     if (event.target.closest('[data-presentation-play]')) return presentationTogglePlay();
@@ -183,27 +216,3 @@ function bindPresentationV2() {
 }
 
 registerFlowmapMode('present', { enter: presentationEnter, leave: presentationLeave });
-
-const renderNotesBeforePresentationV2 = renderNotes;
-renderNotes = function renderNotesPresentationV2() {
-  renderNotesBeforePresentationV2();
-  presentationRenderNodeState();
-};
-
-const renderEdgesBeforePresentationV2 = renderEdges;
-renderEdges = function renderEdgesPresentationV2() {
-  renderEdgesBeforePresentationV2();
-  presentationRenderNodeState();
-};
-
-const updateFlowExperienceUiBeforePresentationV2 = updateFlowExperienceUi;
-updateFlowExperienceUi = function updateFlowExperienceUiPresentationV2() {
-  updateFlowExperienceUiBeforePresentationV2();
-  presentationRenderUi();
-};
-
-const bindEventsBeforePresentationV2 = bindEvents;
-bindEvents = function bindEventsPresentationV2() {
-  bindEventsBeforePresentationV2();
-  bindPresentationV2();
-};
