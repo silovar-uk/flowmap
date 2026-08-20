@@ -40,7 +40,7 @@ function settleReadingViewLayoutV0282(anchor, serial) {
     requestAnimationFrame(() => {
       if (serial !== readingViewTransitionSerialV0282) return;
       restoreReadingViewAnchorV0282(anchor);
-      if (typeof renderAll === 'function') renderAll();
+      if (typeof applyLayout === 'function') applyLayout();
       if (typeof syncCleanViewUiV0281 === 'function') syncCleanViewUiV0281();
     });
   });
