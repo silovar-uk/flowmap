@@ -70,17 +70,17 @@
   <script src="./src/container-controls.js?v=0.22.0" defer></script>
   <script src="./src/container-guidance.js?v=0.22.0" defer></script>
   <script src="./src/container-inspector.js?v=0.22.0" defer></script>
-  <script src="./src/ui-bootstrap.js?v=0.28.0" defer></script>
+  <script src="./src/ui-bootstrap.js?v=0.28.1" defer></script>
 </head>
 <body>
   <div id="app" class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#" aria-label="Flowmap ホーム"><img src="./favicon.svg?v=0.22.0" alt="" /><span class="brand-name">flowmap</span><span class="version-badge">v0.28.0</span></a>
+      <a class="brand" href="#" aria-label="Flowmap ホーム"><img src="./favicon.svg?v=0.22.0" alt="" /><span class="brand-name">flowmap</span><span class="version-badge">v0.28.1</span></a>
       <div class="toolbar toolbar-main" aria-label="追加と編集">
         <button id="add-note" class="button primary" type="button"><span>＋</span>処理</button><button id="add-group" class="button" type="button"><span>▣</span>囲み</button><button id="add-phase" class="button" type="button"><span>┃</span>フェーズ</button><span class="toolbar-divider"></span><button id="auto-layout" class="button quiet" type="button">整える</button><button id="undo" class="icon-button" type="button" title="元に戻す（Ctrl/Cmd+Z）">↶</button><button id="redo" class="icon-button" type="button" title="やり直す（Ctrl/Cmd+Shift+Z）">↷</button>
       </div>
       <div class="toolbar toolbar-view" aria-label="表示とデータ">
-        <div class="zoom-control"><button id="zoom-out" class="icon-button" type="button" aria-label="縮小">−</button><button id="zoom-reset" class="zoom-label" type="button">100%</button><button id="zoom-in" class="icon-button" type="button" aria-label="拡大">＋</button></div><button id="fit-view" class="button quiet" type="button">全体</button><label class="search-box"><span>⌕</span><input id="search-input" type="search" placeholder="図形を検索…" autocomplete="off" /><kbd>⌘K</kbd></label><button id="data-button" class="button quiet" type="button">データ</button><button id="print-button" class="button quiet" type="button">PDF</button>
+        <div class="zoom-control"><button id="zoom-out" class="icon-button" type="button" aria-label="縮小">−</button><button id="zoom-reset" class="zoom-label" type="button">100%</button><button id="zoom-in" class="icon-button" type="button" aria-label="拡大">＋</button></div><button id="fit-view" class="button quiet" type="button">全体</button><label class="search-box"><span>⌕</span><input id="search-input" type="search" placeholder="図形を検索…" autocomplete="off" /><kbd>⌘K</kbd></label><button id="data-button" class="button quiet" type="button">入出力</button><button id="print-button" class="button quiet" type="button">PDF</button>
       </div>
       <div id="save-indicator" class="save-indicator" aria-live="polite" title="IndexedDBへ自動保存">読み込み中…</div>
     </header>
@@ -112,7 +112,7 @@
     </main>
   </div>
 
-  <dialog id="data-dialog" class="app-dialog"><form method="dialog"><header><div><span>DATA</span><h2>書き出しとデータ管理</h2></div><button value="cancel" aria-label="閉じる">×</button></header><div class="dialog-grid"><button id="export-json" type="button"><strong>JSONを書き出す</strong><span>完全なバックアップ</span></button><button id="export-yaml" type="button"><strong>YAMLを書き出す</strong><span>一括編集向け</span></button><label><strong>ファイルを読み込む</strong><span>JSON / YAML</span><input id="import-file" type="file" accept=".json,.yaml,.yml" /></label><button id="reset-sample" type="button"><strong>サンプルへ戻す</strong><span>現在の内容を初期化</span></button></div></form></dialog>
+  <dialog id="data-dialog" class="app-dialog"><form method="dialog"><header><div><span>FILES</span><h2>入出力</h2></div><button value="cancel" aria-label="閉じる">×</button></header><div class="dialog-grid"><button id="export-json" type="button"><strong>JSONを書き出す</strong><span>完全なバックアップ</span></button><button id="export-yaml" type="button"><strong>YAMLを書き出す</strong><span>一括編集向け</span></button><label><strong>ファイルを読み込む</strong><span>JSON / YAML</span><input id="import-file" type="file" accept=".json,.yaml,.yml" /></label><button id="reset-sample" type="button"><strong>サンプルへ戻す</strong><span>現在の内容を初期化</span></button></div></form></dialog>
   <dialog id="help-dialog" class="app-dialog help-dialog"><form method="dialog"><header><div><span>SHORTCUTS</span><h2>操作とショートカット</h2></div><button value="cancel" aria-label="閉じる">×</button></header><div class="shortcut-grid"><div><kbd>アウトライン Enter</kbd><span>次の工程を追加</span></div><div><kbd>Tab / Shift＋Tab</kbd><span>工程の階層を変更</span></div><div><kbd>Ctrl / Cmd＋Enter</kbd><span>選択中の工程へ関係を追加</span></div><div><kbd>行の左端をドラッグ</kbd><span>工程を並べ替え、自動矢印を更新</span></div><div><kbd>空白クリック</kbd><span>選択中なら解除。未選択時は何もしない</span></div><div><kbd>空白ドラッグ</kbd><span>ボードを移動</span></div><div><kbd>Shift＋範囲ドラッグ</kbd><span>囲った図形を複数選択</span></div><div><kbd>Ctrl／Cmd＋Shift＋範囲ドラッグ</kbd><span>現在の複数選択へ追加</span></div><div><kbd>Ctrl／Cmd＋空白クリック</kbd><span>その位置へ処理を追加し、すぐタイトル入力</span></div><div><kbd>Ctrl／Cmd＋Alt／Option</kbd><span>方眼に吸着せず自由配置</span></div><div data-shortcut="rename"><kbd>F2</kbd><span>選択した図形の名前を編集</span></div><div><kbd>Shift＋クリック</kbd><span>複数選択へ追加・解除</span></div><div><kbd>Space＋ドラッグ</kbd><span>ボードを移動</span></div><div><kbd>Delete</kbd><span>選択した図形を削除。複数選択時はまとめて削除</span></div><div><kbd>F</kbd><span>選択へズーム</span></div><div><kbd>接続点をドラッグ</kbd><span>接続先を細かく指定</span></div></div></form></dialog>
   <div id="toast-region" class="toast-region" aria-live="polite"></div><section id="print-sheet" class="print-sheet" aria-hidden="true"></section>
 </body>
