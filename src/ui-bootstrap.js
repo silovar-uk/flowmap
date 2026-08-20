@@ -1,4 +1,4 @@
-/* Flowmap v0.27 bootstrap — runs after every override is loaded */
+/* Flowmap v0.28 bootstrap — runs after every override is loaded */
 let tutorialAdvanceTimer = null;
 
 prepareTutorialStep = function prepareTutorialStepV12(step) {
@@ -90,13 +90,15 @@ async function loadFlowmapEnhancementAssets() {
     loadFlowmapStyle('./styles/pdf-preview.css?v=0.24.0', 'pdf-preview-style'),
     loadFlowmapStyle('./styles/pdf-readability-v025.css?v=0.25.0', 'pdf-readability-v025-style'),
     loadFlowmapStyle('./styles/pdf-pages-v026.css?v=0.26.0', 'pdf-pages-v026-style'),
-    loadFlowmapStyle('./styles/guided-sample-tutorial-v027.css?v=0.27.0', 'guided-sample-tutorial-v027-style')
+    loadFlowmapStyle('./styles/guided-sample-tutorial-v027.css?v=0.27.0', 'guided-sample-tutorial-v027-style'),
+    loadFlowmapStyle('./styles/experience-v028.css?v=0.28.0', 'experience-v028-style')
   ]);
   await loadFlowmapScript('./src/p0-experience-fixes.js?v=0.23.0', 'p0-script');
   await loadFlowmapScript('./src/pdf-preview.js?v=0.24.0', 'pdf-preview-script');
   await loadFlowmapScript('./src/pdf-readability-v025.js?v=0.25.0', 'pdf-readability-v025-script');
   await loadFlowmapScript('./src/pdf-pages-v026.js?v=0.26.0', 'pdf-pages-v026-script');
   await loadFlowmapScript('./src/guided-sample-tutorial-v027.js?v=0.27.0', 'guided-sample-tutorial-v027-script');
+  await loadFlowmapScript('./src/experience-v028.js?v=0.28.0', 'experience-v028-script');
 }
 
 async function bootFlowmap() {
@@ -105,7 +107,9 @@ async function bootFlowmap() {
   } catch (error) {
     console.error('[Flowmap] Failed to load enhancement assets', error);
   }
+  if (typeof prepareFlowmapStartup === 'function') await prepareFlowmapStartup();
   await init();
+  if (typeof installFlowmapExperienceV28 === 'function') installFlowmapExperienceV28();
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { void bootFlowmap(); }, { once: true });
