@@ -1,4 +1,4 @@
-/* Flowmap v0.28.1 bootstrap — runs after every override is loaded */
+/* Flowmap v0.28.2 bootstrap — runs after every override is loaded */
 let tutorialAdvanceTimer = null;
 
 prepareTutorialStep = function prepareTutorialStepV12(step) {
@@ -95,6 +95,7 @@ async function loadFlowmapEnhancementAssets() {
     loadFlowmapStyle('./styles/experience-v028-compat.css?v=0.28.0', 'experience-v028-compat-style')
   ]);
   await loadFlowmapStyle('./styles/io-png-v0281.css?v=0.28.1', 'io-png-v0281-style');
+  await loadFlowmapStyle('./styles/reading-view-v0282.css?v=0.28.2', 'reading-view-v0282-style');
   await loadFlowmapScript('./src/p0-experience-fixes.js?v=0.23.0', 'p0-script');
   await loadFlowmapScript('./src/pdf-preview.js?v=0.24.0', 'pdf-preview-script');
   await loadFlowmapScript('./src/pdf-readability-v025.js?v=0.25.0', 'pdf-readability-v025-script');
@@ -102,6 +103,7 @@ async function loadFlowmapEnhancementAssets() {
   await loadFlowmapScript('./src/guided-sample-tutorial-v027.js?v=0.27.0', 'guided-sample-tutorial-v027-script');
   await loadFlowmapScript('./src/experience-v028.js?v=0.28.0', 'experience-v028-script');
   await loadFlowmapScript('./src/io-png-v0281.js?v=0.28.1', 'io-png-v0281-script');
+  await loadFlowmapScript('./src/reading-view-v0282.js?v=0.28.2', 'reading-view-v0282-script');
   await loadFlowmapScript('./src/presentation-lifecycle-v028.js?v=0.28.0', 'presentation-lifecycle-v028-script');
 }
 
@@ -118,7 +120,7 @@ async function bootFlowmap() {
   if (typeof installPresentationLifecycleV28 === 'function') installPresentationLifecycleV28();
   if (typeof configureDataWorkspaceLabelsV28 === 'function') configureDataWorkspaceLabelsV28();
   const badge = document.querySelector('.version-badge');
-  if (badge) badge.textContent = 'v0.28.1';
+  if (badge) badge.textContent = 'v0.28.2';
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { void bootFlowmap(); }, { once: true });
