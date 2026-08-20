@@ -1,0 +1,214 @@
+/* Flowmap v0.28.1 — reading view and data I/O fixes */
+#clean-view-button.is-active {
+  border-color: #7290c3;
+  background: #eaf1fc;
+  color: #315d9f;
+}
+
+.clean-view-exit-button-v28 {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 260;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #b8c5bd;
+  border-radius: 9px;
+  background: rgba(255,255,252,.96);
+  color: #34473b;
+  box-shadow: 0 8px 26px rgba(34,45,38,.16);
+  font-size: 11px;
+  font-weight: 800;
+  backdrop-filter: blur(6px);
+}
+.clean-view-exit-button-v28[hidden] { display: none !important; }
+.clean-view-exit-button-v28:hover { border-color: #8fa39a; background: #fff; }
+
+body[data-clean-view="true"] .app-shell { grid-template-rows: 1fr; }
+body[data-clean-view="true"] .topbar,
+body[data-clean-view="true"] #navigator,
+body[data-clean-view="true"] #inspector,
+body[data-clean-view="true"] .outline-workspace,
+body[data-clean-view="true"] .floating-panel-button,
+body[data-clean-view="true"] .canvas-create-toolbar,
+body[data-clean-view="true"] .canvas-view-tools,
+body[data-clean-view="true"] .canvas-actions,
+body[data-clean-view="true"] .canvas-hint,
+body[data-clean-view="true"] .minimap,
+body[data-clean-view="true"] .quick-popover,
+body[data-clean-view="true"] .presentation-controller,
+body[data-clean-view="true"] .flow-focus-toolbar,
+body[data-clean-view="true"] .node-quick-actions,
+body[data-clean-view="true"] .connector-handle,
+body[data-clean-view="true"] .edge-endpoint,
+body[data-clean-view="true"] .connection-preview,
+body[data-clean-view="true"] .group-header button,
+body[data-clean-view="true"] .v12-draft-node,
+body[data-clean-view="true"] #connection-drop-zones,
+body[data-clean-view="true"] #connection-drop-ghost { display: none !important; }
+body[data-clean-view="true"] .workspace,
+body[data-clean-view="true"][data-flow-mode="outline"] .workspace {
+  display: grid !important;
+  grid-template-columns: 0 minmax(0, 1fr) 0 !important;
+  min-height: 0;
+}
+body[data-clean-view="true"] #board,
+body[data-clean-view="true"][data-flow-mode="outline"] #board { display: block !important; }
+
+#data-dialog {
+  width: min(860px, calc(100vw - 28px));
+  max-height: min(880px, calc(100vh - 28px));
+  overflow: hidden;
+}
+#data-dialog > form {
+  width: 100%;
+  max-height: inherit;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+#data-dialog > form > header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #fbfcf8;
+}
+.data-layout-v28 {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+.data-section-v28 {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d8dfda;
+  border-radius: 12px;
+  background: #f8faf7;
+}
+.data-section-v28 > header {
+  display: block;
+  padding: 11px 13px 9px;
+  border-bottom: 1px solid #e2e7e3;
+  background: #f2f5f1;
+}
+.data-section-v28 > header strong { display: block; font-size: 12px; }
+.data-section-v28 > header span { display: block; margin-top: 2px; color: #7a867e; font-size: 9px; }
+.data-section-grid-v28 {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  padding: 11px;
+}
+.data-section-grid-v28 > button,
+.data-section-grid-v28 > label,
+.data-paste-card-v28 {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 84px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 13px;
+  border: 1px solid #d6ddd7;
+  border-radius: 9px;
+  background: #fff;
+  text-align: left;
+}
+.data-section-grid-v28 > button:disabled { cursor: progress; opacity: .66; }
+.data-section-grid-v28 > button strong,
+.data-section-grid-v28 > label strong,
+.data-paste-card-v28 strong { font-size: 12px; }
+.data-section-grid-v28 > button span,
+.data-section-grid-v28 > label span,
+.data-paste-card-v28 > span { color: #79857d; font-size: 9px; line-height: 1.45; }
+.data-file-card-v28 input[type="file"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 7px;
+  font-size: 10px;
+}
+.data-paste-card-v28 { grid-column: 1 / -1; align-content: stretch; }
+.data-paste-card-v28 textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 120px;
+  margin-top: 7px;
+  resize: vertical;
+  padding: 9px 10px;
+  border: 1px solid #cdd6cf;
+  border-radius: 8px;
+  background: #fbfcfa;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.data-paste-card-v28 button {
+  justify-self: end;
+  min-height: 34px;
+  margin-top: 7px;
+  padding: 0 11px;
+  border: 1px solid #9eb3d6;
+  border-radius: 7px;
+  background: #edf3fd;
+  color: #315d9f;
+  font-size: 10px;
+  font-weight: 800;
+}
+.import-mode-choice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 11px 11px 0;
+  border: 0;
+}
+.import-mode-choice legend {
+  margin-bottom: 7px;
+  color: #5d6c63;
+  font-size: 10px;
+  font-weight: 800;
+}
+.import-mode-choice label {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid #d3dbd5;
+  border-radius: 9px;
+  background: #fff;
+  cursor: pointer;
+}
+.import-mode-choice label:has(input:checked) {
+  border-color: #7898ca;
+  background: #eef4ff;
+  box-shadow: 0 0 0 2px rgba(72,112,177,.10);
+}
+.import-mode-choice input { display: block; margin-top: 3px; }
+.import-mode-choice span { display: grid; gap: 2px; }
+.import-mode-choice strong { color: #34473b; font-size: 11px; }
+.import-mode-choice small { color: #718078; font-size: 9px; line-height: 1.45; }
+.data-section-v28.is-danger-v28 { border-color: #ead0cb; background: #fff9f8; }
+.data-section-v28.is-danger-v28 > header { border-bottom-color: #edd8d4; background: #fff3f1; }
+.data-section-v28.is-danger-v28 .data-section-grid-v28 > button {
+  border-color: #e5c4be;
+  background: #fff8f6;
+  color: #8b4138;
+}
+
+@media (max-width: 820px) {
+  #data-dialog { width: calc(100vw - 16px); max-height: calc(100vh - 16px); }
+  .data-layout-v28 { padding: 10px; gap: 10px; }
+  .data-section-grid-v28 { grid-template-columns: 1fr; padding: 9px; }
+  .data-paste-card-v28 { grid-column: auto; }
+  .data-section-grid-v28 > button,
+  .data-section-grid-v28 > label { min-height: 72px; }
+  .import-mode-choice { grid-template-columns: 1fr; padding: 9px 9px 0; }
+  .clean-view-exit-button-v28 { top: 10px; right: 10px; min-height: 36px; }
+}
