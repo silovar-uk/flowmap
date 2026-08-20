@@ -91,7 +91,8 @@ async function loadFlowmapEnhancementAssets() {
     loadFlowmapStyle('./styles/pdf-readability-v025.css?v=0.25.0', 'pdf-readability-v025-style'),
     loadFlowmapStyle('./styles/pdf-pages-v026.css?v=0.26.0', 'pdf-pages-v026-style'),
     loadFlowmapStyle('./styles/guided-sample-tutorial-v027.css?v=0.27.0', 'guided-sample-tutorial-v027-style'),
-    loadFlowmapStyle('./styles/experience-v028.css?v=0.28.0', 'experience-v028-style')
+    loadFlowmapStyle('./styles/experience-v028.css?v=0.28.0', 'experience-v028-style'),
+    loadFlowmapStyle('./styles/experience-v028-compat.css?v=0.28.0', 'experience-v028-compat-style')
   ]);
   await loadFlowmapScript('./src/p0-experience-fixes.js?v=0.23.0', 'p0-script');
   await loadFlowmapScript('./src/pdf-preview.js?v=0.24.0', 'pdf-preview-script');
