@@ -102,8 +102,8 @@ body[data-clean-view="true"] .phase-card.is-selected {
 }
 body[data-clean-view="true"] .edge.is-selected { stroke: #aeb7b1; stroke-width: 1.35px; opacity: .66; }
 
-body[data-flow-mode="present"] .topbar { opacity: .08; transition: opacity .16s ease; }
-body[data-flow-mode="present"] .topbar:hover { opacity: 1; }
+body[data-flow-mode="present"] .app-shell { grid-template-rows: 1fr; }
+body[data-flow-mode="present"] .topbar,
 body[data-flow-mode="present"] .canvas-create-toolbar,
 body[data-flow-mode="present"] .canvas-view-tools,
 body[data-flow-mode="present"] .canvas-actions,
